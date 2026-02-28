@@ -3,19 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>INNER. Strasbourg | Ultra-Premium Brand Guidelines</title>
+    <title>INNER. | Brand Guidelines Ultra-Premium</title>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Pinyon+Script&family=Montserrat:wght@100;300;600;900&display=swap" rel="stylesheet">
     
     <style>
         :root {
             /* Palette Or Liquide */
-            --gold-gradient: linear-gradient(135deg, #BF953F 0%, #FCF6BA 20%, #B38728 50%, #FBF5B7 80%, #AA771C 100%);
+            --gold-gradient: linear-gradient(135deg, #BF953F, #FCF6BA, #B38728, #FBF5B7, #AA771C);
             --or-flash: #FFD700;
             --noir-mat: #000000;
             --noir-deep: #050505;
-            --noir-card: #0a0a0a;
-            --x-unit: 18px; /* Variable de mesure X */
-            --transition: all 0.4s ease-out;
+            --x-unit: 18px; /* Taille X pour les calculs */
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -25,8 +23,7 @@
             color: #ffffff;
             font-family: 'Montserrat', sans-serif;
             overflow-x: hidden;
-            font-size: 1.15rem; /* Texte global plus grand */
-            -webkit-font-smoothing: antialiased;
+            font-size: 1.1rem; /* Texte plus grand */
         }
 
         /* --- FOND ANIMÉ MODERNE --- */
@@ -38,21 +35,22 @@
         }
         .bg-glow {
             position: absolute;
-            width: 800px; height: 800px;
-            background: radial-gradient(circle, rgba(191, 149, 63, 0.08) 0%, transparent 70%);
-            top: -300px; right: -300px;
-            animation: moveGlow 20s infinite alternate ease-in-out;
+            width: 600px; height: 600px;
+            background: radial-gradient(circle, rgba(191, 149, 63, 0.05) 0%, transparent 70%);
+            top: -200px; right: -200px;
+            animation: moveGlow 15s infinite alternate;
         }
-        @keyframes moveGlow { 0% { transform: translate(0,0); } 100% { transform: translate(-300px, 300px); } }
 
-        /* --- NAVIGATION --- */
+        @keyframes moveGlow { 0% { transform: translate(0,0); } 100% { transform: translate(-200px, 200px); } }
+
+        /* --- HEADER BY BRICE JCT --- */
         nav {
-            padding: 25px 5%;
+            padding: 30px 5%;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
-            background: rgba(0,0,0,0.85);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            background: rgba(0,0,0,0.8);
             backdrop-filter: blur(20px);
             position: sticky; top: 0; z-index: 1000;
         }
@@ -65,34 +63,30 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
-        .signature-top {
-            font-family: 'Montserrat', sans-serif;
-            font-weight: 400;
-            font-size: 0.75rem;
-            letter-spacing: 2px;
-            color: rgba(255,255,255,0.7);
-        }
 
         /* --- HERO SECTION --- */
         .hero {
-            padding: 150px 5% 100px;
+            padding: 120px 5%;
             text-align: center;
-            border-bottom: 1px solid rgba(191, 149, 63, 0.1);
+            border-bottom: 1px solid rgba(191, 149, 63, 0.2);
         }
+        .logo-main { display: inline-block; position: relative; }
+        
         .monogramme {
             font-family: 'Pinyon Script', cursive;
             background: var(--gold-gradient);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            font-size: 11rem; /* Taille Massive */
+            font-size: 10rem; /* Taille massive */
             line-height: 0.8;
             margin-bottom: calc(var(--x-unit) * 1.5);
             display: block;
         }
+
         .brand-text {
             font-family: 'Cinzel', serif;
-            font-size: 4.5rem;
-            letter-spacing: 22px;
+            font-size: 4rem;
+            letter-spacing: 20px;
             background: var(--gold-gradient);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -103,17 +97,17 @@
         .dot { 
             width: var(--x-unit); height: var(--x-unit); 
             background: var(--gold-gradient); 
-            border-radius: 50%; margin-left: 12px; 
+            border-radius: 50%; margin-left: 10px; 
         }
 
-        /* --- LAYOUT BENTO GRID --- */
-        .container { max-width: 1400px; margin: 0 auto; padding: 100px 5%; }
+        /* --- LAYOUT --- */
+        .container { max-width: 1300px; margin: 0 auto; padding: 80px 5%; }
         
         h2 {
             font-family: 'Cinzel';
-            font-size: 2.8rem;
-            margin-bottom: 60px;
-            letter-spacing: 6px;
+            font-size: 2.5rem;
+            margin-bottom: 50px;
+            letter-spacing: 5px;
             text-transform: uppercase;
             background: var(--gold-gradient);
             -webkit-background-clip: text;
@@ -123,18 +117,19 @@
         .bento-grid {
             display: grid;
             grid-template-columns: repeat(12, 1fr);
-            gap: 30px;
+            gap: 25px;
         }
 
         .bento-card {
-            background: var(--noir-card);
+            background: var(--noir-deep);
             border: 1px solid #1a1a1a;
-            padding: 50px;
-            border-radius: 28px;
-            transition: var(--transition);
+            padding: 40px;
+            border-radius: 24px;
+            transition: 0.4s;
         }
-        .bento-card:hover { border-color: #BF953F; transform: translateY(-8px); }
+        .bento-card:hover { border-color: #BF953F; transform: translateY(-5px); }
 
+        /* Spans pour le grid */
         .span-6 { grid-column: span 6; }
         .span-4 { grid-column: span 4; }
         .span-8 { grid-column: span 8; }
@@ -144,56 +139,51 @@
             color: #BF953F; 
             font-family: 'Montserrat'; 
             font-weight: 600; 
-            margin-bottom: 30px; 
+            margin-bottom: 25px; 
             text-transform: uppercase;
-            letter-spacing: 3px;
-            font-size: 1.3rem;
+            letter-spacing: 2px;
+            font-size: 1.2rem;
         }
 
-        /* --- COULEURS --- */
+        /* --- COLORS & VALUES --- */
         .color-preview {
-            height: 140px; border-radius: 16px; margin-bottom: 30px;
+            height: 120px; border-radius: 12px; margin-bottom: 25px;
             display: flex; align-items: center; justify-content: center;
-            font-weight: 900; letter-spacing: 3px; font-size: 1.1rem;
+            font-weight: 900; letter-spacing: 2px;
         }
         .gold-preview { background: var(--gold-gradient); color: #000; }
         .black-preview { background: #000; border: 1px solid #BF953F; color: #BF953F; }
 
-        .info-row { display: flex; justify-content: space-between; padding: 15px 0; border-bottom: 1px solid #151515; }
-        .info-row span:first-child { opacity: 0.4; font-weight: 300; font-size: 0.95rem; }
-        .info-row span:last-child { font-weight: 600; color: #fff; font-size: 1.1rem; }
+        .info-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #111; }
+        .info-row span:first-child { opacity: 0.4; font-weight: 300; }
+        .info-row span:last-child { font-weight: 600; color: #fff; }
 
-        /* --- VISUALISATION DES NORMES --- */
+        /* --- NORMES X --- */
         .visual-rules {
-            border: 2px dashed rgba(191, 149, 63, 0.4);
-            padding: 80px;
-            border-radius: 24px;
+            border: 2px dashed rgba(191, 149, 63, 0.3);
+            padding: 60px;
+            border-radius: 20px;
             text-align: center;
-            background: rgba(191,149,63, 0.02);
         }
+
         .tag {
             display: inline-block;
-            padding: 8px 20px;
-            background: rgba(191, 149, 63, 0.15);
+            padding: 5px 15px;
+            background: rgba(191, 149, 63, 0.1);
             color: #FCF6BA;
             border-radius: 50px;
-            font-size: 0.85rem;
-            margin-bottom: 25px;
-            font-weight: 600;
+            font-size: 0.8rem;
+            margin-bottom: 15px;
         }
 
-        /* --- LISTES ET PARAGRAPHES --- */
-        p { margin-bottom: 20px; opacity: 0.8; line-height: 1.8; }
-        strong { color: #fff; font-weight: 600; }
-        ul { list-style: none; margin-top: 20px; }
-        li { margin-bottom: 20px; position: relative; padding-left: 35px; line-height: 1.7; color: rgba(255,255,255,0.9); }
-        li::before { content: "›"; position: absolute; left: 0; color: #BF953F; font-size: 1.5rem; font-weight: bold; top: -5px; }
+        ul { list-style: none; }
+        li { margin-bottom: 15px; position: relative; padding-left: 25px; }
+        li::before { content: "→"; position: absolute; left: 0; color: #BF953F; }
 
-        @media (max-width: 1000px) {
+        @media (max-width: 900px) {
             .span-6, .span-4, .span-8 { grid-column: span 12; }
-            .monogramme { font-size: 7rem; }
-            .brand-text { font-size: 2.5rem; letter-spacing: 12px; }
-            nav { flex-direction: column; gap: 15px; text-align: center; padding: 20px; }
+            .monogramme { font-size: 6rem; }
+            .brand-text { font-size: 2rem; letter-spacing: 10px; }
         }
     </style>
 </head>
@@ -202,8 +192,8 @@
     <div class="bg-animate"><div class="bg-glow"></div></div>
 
     <nav>
-        <div class="by-brice">INNER. STRASBOURG</div>
-        <div class="signature-top">DesignWebUi by Brice JCt.</div>
+        <div class="by-brice">BY BRICE JCT</div>
+        <div style="font-family: 'Cinzel'; color: #BF953F; letter-spacing: 5px;">INNER. STRASBOURG</div>
     </nav>
 
     <header class="hero">
@@ -211,137 +201,123 @@
             <span class="monogramme">In</span>
             <h1 class="brand-text">INNER<span class="dot"></span></h1>
         </div>
-        <p style="margin-top: 60px; font-weight: 100; letter-spacing: 12px; opacity: 0.5; font-size: 0.9rem;">CHARTE GRAPHIQUE OFFICIELLE — V1.0</p>
+        <p style="margin-top: 50px; font-weight: 100; letter-spacing: 10px; opacity: 0.6;">BRAND GUIDELINES V1.0</p>
     </header>
 
     <main class="container">
 
-        <h2>01. Palette Chromatique & Finition</h2>
+        <h2>01. Chromatique & Finition</h2>
         <div class="bento-grid">
             <div class="bento-card span-6">
-                <div class="color-preview gold-preview">OR FLASH (IDENTITÉ VISUELLE)</div>
-                <h3>Références de fabrication</h3>
-                <div class="info-row"><span>WEB HEX (DIGITAL)</span><span>#FFD700</span></div>
-                <div class="info-row"><span>RVB (ÉCRANS/VIDÉO)</span><span>255, 215, 0</span></div>
-                <div class="info-row"><span>CMJN (IMPRESSION STANDARD)</span><span>C:0 M:20 Y:100 K:0</span></div>
-                <div class="info-row"><span>PANTONE (LUXE/MÉTAL)</span><span>Pantone 871 C (Or Métallique)</span></div>
-                <div class="info-row"><span>PANTONE (FLASH)</span><span>Pantone 116 C (Or Jaune Flash)</span></div>
-                <p style="margin-top: 30px;">Pour éviter toute nuance ou effet "jaune", utilisez exclusivement ces références. Utilisation : Couleur unie sans dégradé pour le monogramme "IN" et le texte "INNER.". </p>
+                <div class="color-preview gold-preview">OR FLASH</div>
+                <div class="info-row"><span>WEB HEX</span><span>#FFD700</span></div>
+                <div class="info-row"><span>RVB</span><span>255, 215, 0</span></div>
+                <div class="info-row"><span>CMJN</span><span>0, 20, 100, 0</span></div>
+                <div class="info-row"><span>PANTONE</span><span>871 C / 116 C</span></div>
+                <p style="margin-top: 20px; font-size: 0.9rem; opacity: 0.7;">Utilisation : Couleur unie sans dégradé pour le monogramme et le texte.</p>
             </div>
             <div class="bento-card span-6">
-                <div class="color-preview black-preview">NOIR MAT (FOND DE PRESTIGE)</div>
-                <h3>Références de fabrication</h3>
-                <div class="info-row"><span>HEX (WEB/DIGITAL)</span><span>#000000</span></div>
-                <div class="info-row"><span>CMJN (NOIR RICHE)</span><span>C:60 M:40 Y:40 K:100</span></div>
-                <div class="info-row"><span>FINITION RECOMMANDÉE</span><span>Vernis sélectif mat</span></div>
-                <div class="info-row"><span>TOUCHER (FEELING)</span><span>Pelliculage "Soft Touch"</span></div>
-                <p style="margin-top: 30px;">Finition recommandée : Vernis sélectif mat ou pelliculage "Soft Touch" pour un aspect haut de gamme au toucher.</p>
+                <div class="color-preview black-preview">NOIR MAT</div>
+                <div class="info-row"><span>HEX</span><span>#000000</span></div>
+                <div class="info-row"><span>CMJN RICHE</span><span>60, 40, 40, 100</span></div>
+                <div class="info-row"><span>FINITION</span><span>Vernis sélectif mat</span></div>
+                <div class="info-row"><span>TEXTURE</span><span>Soft Touch / Mat Profond</span></div>
+                <p style="margin-top: 20px; font-size: 0.9rem; opacity: 0.7;">Finition recommandée : Pelliculage haut de gamme au toucher.</p>
             </div>
         </div>
 
         <h2>02. Typographie & Alignement</h2>
         <div class="bento-grid">
             <div class="bento-card span-12">
-                <h3>RÈGLES D'ALIGNEMENT ET DE CENTRAGE</h3>
+                <h3>Règles d'alignement strictes</h3>
                 <div class="visual-rules">
                     <span class="tag">ALIGNEMENT CENTRAL VERTICAL</span>
-                    <p style="margin-bottom: 25px;">Le monogramme "IN" et le bloc texte "INNER." doivent être parfaitement alignés sur leur axe central vertical.</p>
-                    <p><strong>Espacement Interne :</strong> La distance entre la base du monogramme "IN" et le sommet du texte "INNER." doit être fixe et proportionnelle, idéalement égale à <strong>1.5X</strong> pour maintenir un équilibre aéré.</p>
+                    <p style="margin-bottom: 20px;">Le monogramme "IN" et le bloc texte "INNER." doivent être parfaitement alignés sur leur axe central vertical.</p>
+                    <p><strong>Espacement Interne :</strong> Distance entre base "IN" et sommet "INNER." = <strong>1.5X</strong>.</p>
                 </div>
             </div>
             <div class="bento-card span-6">
-                <h3>Monogramme "IN" (L'Emblème)</h3>
+                <h3>L'Emblème "IN"</h3>
                 <ul>
-                    <li>Style Signature : <strong>Calligraphie Script de style "Copperplate" ou "English Script"</strong>.</li>
-                    <li>Détail Visuel : Tracé simulant la plume d'oie avec des pleins et des déliés accentués.</li>
-                    <li><strong>Proportions :</strong> La hauteur du monogramme "IN" doit être environ <strong>2,5 fois</strong> supérieure à la hauteur des lettres du texte "INNER.".</li>
-                    <li>Les courbes doivent être fluides et sans cassures (courbes de Bézier parfaites en vectoriel).</li>
-                    <li><strong>Interdiction :</strong> Ne jamais modifier l'inclinaison des lettres "IN" ; l'angle doit rester fixe pour préserver l'équilibre visuel.</li>
+                    <li>Style Signature Calligraphie "Copperplate".</li>
+                    <li>Tracé à la plume d'oie (pleins et déliés accentués).</li>
+                    <li><strong>Ratio :</strong> Hauteur "IN" = 2.5x hauteur du texte "INNER.".</li>
+                    <li>Interdiction : Ne jamais modifier l'inclinaison.</li>
                 </ul>
             </div>
             <div class="bento-card span-6">
-                <h3>Texte Principal "INNER." (La Marque)</h3>
+                <h3>La Marque "INNER."</h3>
                 <ul>
-                    <li>Police : Serif Premium (Type <strong>Cinzel Bold</strong> pour un aspect romain/statutaire ou **Garamond Premier Pro Display**).</li>
-                    <li>Formatage Strict : Majuscules obligatoires. Point final inclus.</li>
-                    <li><strong>Espacement (Kerning) :</strong> Réglage généreux (environ <strong>+50 à +100</strong>) pour augmenter l'aspect "Prestige".</li>
-                    <li>Le point après "INNER." fait partie intégrante du logo ; il symbolise l'aboutissement et la perfection.</li>
+                    <li>Police : <strong>Cinzel Bold</strong> (Prestige Serif).</li>
+                    <li>Majuscules obligatoires. Point final inclus.</li>
+                    <li><strong>Kerning :</strong> Réglage +100 pour l'aspect "Prestige".</li>
+                    <li>Lissage Web : Réglage "Strong" obligatoire.</li>
                 </ul>
-            </div>
-            <div class="bento-card span-12">
-                <h3>HIÉRARCHIE ET POLICES COMPLÉMENTAIRES</h3>
-                <p>Pour vos documents (flyers, site web), utilisez ces polices d'accompagnement pour ne pas surcharger le logo :</p>
-                <div class="info-row"><span>Titres de sections</span><span>Cinzel (Regular / Light weight)</span></div>
-                <div class="info-row"><span>Corps de texte</span><span>Montserrat Light ou Lato (Sans-Serif modern)</span></div>
-                <p style="margin-top: 20px;">Cela crée un contraste qui fait ressortir le logo.</p>
             </div>
         </div>
 
-        <h2>03. Normes d'Espacement & Zone X</h2>
+        <h2>03. Zone d'exclusion (Variable X)</h2>
         <div class="bento-grid">
             <div class="bento-card span-8">
                 <div class="visual-rules" style="border-color: #BF953F;">
-                    <span style="font-family: 'Cinzel'; font-size: 2.2rem; color: #BF953F; border: 1px dashed #BF953F; padding: 25px; letter-spacing: 10px;">
-                        INNER<span style="width:10px; height:10px; background:#BF953F; display:inline-block; border-radius:50%; margin-left:5px;"></span>
+                    <span style="font-family: 'Cinzel'; font-size: 2rem; color: #BF953F; border: 1px dashed #BF953F; padding: 20px;">
+                        [ ZONE SILENCE 1X ]
                     </span>
                 </div>
             </div>
             <div class="bento-card span-4">
-                <h3>DÉFINITION DE LA ZONE DE SÉCURITÉ</h3>
-                <p>La Variable <strong>"X"</strong> : La hauteur du point final situé après le mot "INNER." est définie comme l’unité de mesure de référence.</p>
-                <ul>
-                    <li><strong>Périmètre 1X :</strong> Zone de silence obligatoire appliquée sur les quatre côtés (haut, bas, gauche, droite).</li>
-                    <li><strong>Bords de Document :</strong> La zone d'exclusion 1X doit être doublée (<strong>2X</strong>) par rapport aux bords du support pour un rendu luxueux.</li>
+                <h3>Calcul de X</h3>
+                <p>La variable <strong>"X"</strong> est égale à la hauteur du point final.</p>
+                <ul style="margin-top: 20px;">
+                    <li>Zone silence : 1X minimum.</li>
+                    <li>Bords de page : 2X minimum.</li>
                 </ul>
-                <p style="font-size: 0.9rem; opacity: 0.6; margin-top: 15px;">Intégrité Visuelle : Aucun élément graphique (texte, bord de page, photo) ne peut pénétrer dans cet espace sous peine de nuire à la lisibilité.</p>
             </div>
         </div>
 
-        <h2>04. Conseils Supports Spécifiques</h2>
+        <h2>04. Fabrication & Usine</h2>
         <div class="bento-grid">
             <div class="bento-card span-4">
-                <h3><span class="tag">SIGNALÉTIQUE</span> Enseignes</h3>
+                <h3>Enseignes</h3>
                 <ul>
-                    <li>Éclairage LED : Privilégiez un éclairage LED **"Blanc Chaud" (entre 2700K et 3000K)** placé derrière le plexiglas Or Flash. Évitez l'éclairage blanc froid.</li>
-                    <li>Matériaux Premium : Lettres boîtiers en inox poli miroir doré ou aluminium composite (Dibond) brossé or.</li>
-                    <li>Vitrines : Utilisez exclusivement du vinyle haute performance de type Or Chrome ou Or Sablé.</li>
+                    <li>Éclairage : LED Blanc Chaud (2700K-3000K).</li>
+                    <li>Matériaux : Inox poli miroir ou Dibond brossé or.</li>
+                    <li>Vitrines : Vinyle Or Chrome ou Sablé.</li>
                 </ul>
             </div>
             <div class="bento-card span-4">
-                <h3><span class="tag">TEXTILE</span> Merchandising</h3>
+                <h3>Textile</h3>
                 <ul>
-                    <li>Broderie : C'est la finition la plus luxueuse. Spécifiez l'utilisation de fils métallisés dorés (type Madeira ou Isacord).</li>
-                    <li>Flocage (Flex) : Utilisez du Flex Or Miroir ou Or Brillant. Évitez le transfert sérigraphique standard (effet moutarde).</li>
-                    <li>Étiquetage : Imprimez le monogramme "IN" en or sur une étiquette intérieure noire satinée.</li>
+                    <li>Broderie : Fils métallisés Madeira/Isacord.</li>
+                    <li>Flocage : Flex Or Miroir uniquement.</li>
+                    <li>Étiquetage : Or sur étiquette noire satinée.</li>
                 </ul>
             </div>
             <div class="bento-card span-4">
-                <h3><span class="tag">PAPIETERIE</span> Cartes de visite</h3>
+                <h3>Supports Luxe</h3>
                 <ul>
-                    <li>Dorure à chaud (Hot Stamping) : Marquage à chaud or sur un papier noir teinté dans la masse (**Arjowiggins Curious Skin Black**).</li>
-                    <li>Vernis Sélectif : Appliquez un vernis 3D (Haut Relief) uniquement sur le monogramme "IN" pour le contraste de texture.</li>
+                    <li>Papier : Curious Skin Black (Arjowiggins).</li>
+                    <li>Finition : Dorure à chaud (Hot Stamping).</li>
+                    <li>Vernis : Relief 3D sur le monogramme.</li>
                 </ul>
             </div>
         </div>
 
-        <h2>05. Paramètres techniques d'Export</h2>
+        <h2>05. Paramètres d'Export</h2>
         <div class="bento-grid">
             <div class="bento-card span-12">
-                <p>Contrôle Qualité : Avant impression, vérifiez que le point final est bien présent et que son diamètre correspond parfaitement à l'espacement appliqué autour du logo.</p>
-                <div class="bento-grid" style="margin-top: 30px;">
-                    <div class="bento-card span-6" style="border: none; padding: 0;">
-                        <h4>FORMATS REQUIS</h4>
-                        <div class="info-row"><span>Vectoriel</span><span>.AI, .EPS, .SVG (Agrandissement infini)</span></div>
-                        <div class="info-row"><span>Résolution</span><span>Minimum 300 DPI (Impression physique)</span></div>
-                        <div class="info-row"><span>Transparent</span><span>.PNG (Incrustation photos/vidéos sans cadre)</span></div>
+                <div class="grid" style="display: flex; justify-content: space-around; flex-wrap: wrap;">
+                    <div style="text-align: center; padding: 20px;">
+                        <h4 style="color: #BF953F;">VECTORIEL</h4>
+                        <p>.AI, .EPS, .SVG obligatoire.</p>
                     </div>
-                    <div class="bento-card span-6" style="border: none; padding: 0;">
-                        <h4>CONSIGNES DE CONFORMITÉ</h4>
-                        <ul>
-                            <li><strong>Vectorisation obligatoire :</strong> Toutes les polices doivent être converties en "contours" (outlines).</li>
-                            <li><strong>Lissage (Anti-aliasing) :</strong> Pour le web, utilisez le réglage "Strong" ou "Smooth" pour les écrans basse résolution.</li>
-                            <li><strong>Réseaux Sociaux :</strong> Exportez en PNG 24-bit (2000x2000px) pour forcer la netteté sur les mobiles.</li>
-                        </ul>
+                    <div style="text-align: center; padding: 20px;">
+                        <h4 style="color: #BF953F;">RÉSOLUTION</h4>
+                        <p>Min. 300 DPI pour le Print.</p>
+                    </div>
+                    <div style="text-align: center; padding: 20px;">
+                        <h4 style="color: #BF953F;">DIGITAL</h4>
+                        <p>PNG 24-bit (Anti-bruit).</p>
                     </div>
                 </div>
             </div>
@@ -349,12 +325,9 @@
 
     </main>
 
-    <footer style="padding: 120px; text-align: center; border-top: 1px solid rgba(255, 255, 255, 0.03); background: #000;">
-        <div style="opacity: 0.3; font-family: 'Cinzel'; letter-spacing: 6px; font-size: 0.9rem;">INNER. STRASBOURG — TOUS DROITS RÉSERVÉS — 2026</div>
-        <div style="opacity: 0.5; font-weight: 300; font-size: 0.8rem; margin-top: 20px; letter-spacing: 2px;">DesignWebUi by Brice JCt.</div>
+    <footer style="padding: 100px; text-align: center; opacity: 0.3; font-family: 'Cinzel'; letter-spacing: 5px;">
+        INNER STRASBOURG — TOUS DROITS RÉSERVÉS — 2026
     </footer>
 
 </body>
-</html>
-
 </html>
