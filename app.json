@@ -2,6 +2,7 @@
   "expo": {
     "name": "Mon Navigateur",
     "slug": "mon-navigateur",
+    "owner": "alpha-korner",
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
@@ -29,6 +30,11 @@
     },
     "plugins": [
       "expo-status-bar"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "46c4cd14-48d1-4d8b-8617-2f4f5c435137"
+      }
+    }
   }
 }
