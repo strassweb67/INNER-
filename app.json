@@ -1,0 +1,27 @@
+{
+  "expo": {
+    "name": "Mon Navigateur",
+    "slug": "mon-navigateur",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.monapp.navigateur",
+      "infoPlist": {
+        "NSAppTransportSecurity": {
+          "NSAllowsArbitraryLoads": true
+        }
+      }
+    },
+    "android": {
+      "package": "com.monapp.navigateur",
+      "permissions": ["INTERNET"]
+    },
+    "web": {
+      "bundler": "metro"
+    }
+  }
+}
