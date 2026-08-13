@@ -1,6 +1,8 @@
-// Page d'accueil : fond VIDÉO + chat IA centré (style ChatGPT) + raccourcis RONDS en bas.
+// Page d'accueil "pro" : logo, recherche (IA/Web), raccourcis ronds, catégories,
+// widget météo+heure, outils rapides, onglets récents — sur fond VIDÉO.
 import React from 'react';
 import {
+  Alert,
   Modal,
   Pressable,
   ScrollView,
@@ -22,15 +24,25 @@ const sid = () => `s_${Date.now().toString(36)}_${_sid++}`;
 const DEFAULT_ITEMS = [
   { id: 's_g', type: 'site', name: 'Google', url: 'https://www.google.com', color: '#4285F4', label: 'G' },
   { id: 's_yt', type: 'site', name: 'YouTube', url: 'https://m.youtube.com', color: '#FF0000', label: '▶' },
-  { id: 's_fb', type: 'site', name: 'Facebook', url: 'https://www.facebook.com', color: '#1877F2', label: 'f' },
   { id: 's_ig', type: 'site', name: 'Instagram', url: 'https://www.instagram.com', color: '#E4405F', label: '◎' },
-  { id: 's_wk', type: 'site', name: 'Wikipedia', url: 'https://fr.wikipedia.org', color: '#111827', label: 'W' },
-  { id: 's_gh', type: 'site', name: 'GitHub', url: 'https://github.com', color: '#24292e', label: '' },
-  { id: 's_az', type: 'site', name: 'Amazon', url: 'https://www.amazon.fr', color: '#FF9900', label: 'a' },
+  { id: 's_x', type: 'site', name: 'X', url: 'https://x.com', color: '#111827', label: '𝕏' },
   { id: 's_yx', type: 'site', name: 'Yandex', url: 'https://yandex.com', color: '#FF3333', label: 'Y' },
 ];
 
-const SUGGESTIONS = ['Résume cette idée', 'Traduire un texte', 'Idées de sortie ce soir', 'Explique-moi simplement'];
+const JOURS = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
+const MOIS = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
+
+function wmo(code) {
+  if (code === 0) return { t: 'Ensoleillé', i: 'sunny' };
+  if (code <= 2) return { t: 'Peu nuageux', i: 'partly-sunny' };
+  if (code === 3) return { t: 'Nuageux', i: 'cloud' };
+  if (code <= 48) return { t: 'Brouillard', i: 'cloud' };
+  if (code <= 67) return { t: 'Pluie', i: 'rainy' };
+  if (code <= 77) return { t: 'Neige', i: 'snow' };
+  if (code <= 82) return { t: 'Averses', i: 'rainy' };
+  if (code <= 86) return { t: 'Neige', i: 'snow' };
+  return { t: 'Orage', i: 'thunderstorm' };
+}
 
 function normalizeUrl(u) {
   const t = (u || '').trim();
@@ -39,9 +51,59 @@ function normalizeUrl(u) {
   return 'https://' + t;
 }
 
-export default function HomeScreen({ theme, incognito, onOpen, onSearch, onAsk }) {
+function domainOf(url) {
+  try { return new URL(url).hostname.replace(/^www\./, ''); } catch (e) { return (url || '').replace(/^https?:\/\//, ''); }
+}
+
+// ---------- Widget Météo + Heure ----------
+function WeatherClock({ theme }) {
+  const [now, setNow] = React.useState(new Date());
+  const [w, setW] = React.useState(null);
+
+  React.useEffect(() => {
+    const id = setInterval(() => setNow(new Date()), 20000);
+    return () => clearInterval(id);
+  }, []);
+
+  React.useEffect(() => {
+    let alive = true;
+    const load = () => {
+      fetch('https://api.open-meteo.com/v1/forecast?latitude=48.5839&longitude=7.7455&current=temperature_2m,apparent_temperature,weather_code&timezone=auto')
+        .then((r) => r.json())
+        .then((d) => { if (alive && d && d.current) setW({ temp: Math.round(d.current.temperature_2m), feels: Math.round(d.current.apparent_temperature), code: d.current.weather_code }); })
+        .catch(() => {});
+    };
+    load();
+    const id = setInterval(load, 900000);
+    return () => { alive = false; clearInterval(id); };
+  }, []);
+
+  const cond = w ? wmo(w.code) : null;
+  const time = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+  const date = `${JOURS[now.getDay()]} ${now.getDate()} ${MOIS[now.getMonth()]}`;
+
+  return (
+    <Glass theme={theme} style={styles.weather} intensity={55} hairline>
+      <LinearGradient colors={theme.gradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={[StyleSheet.absoluteFill, { opacity: 0.5 }]} />
+      <View style={styles.weatherLeft}>
+        <Text style={[styles.wCity, { color: theme.text }]}>Strasbourg</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+          <Text style={[styles.wTemp, { color: theme.text }]}>{w ? `${w.temp}°` : '--°'}</Text>
+          <Ionicons name={cond ? cond.i : 'partly-sunny'} size={30} color={theme.accent} />
+        </View>
+        <Text style={[styles.wCond, { color: theme.subtext }]}>{cond ? cond.t : 'Chargement…'}{w ? ` · ressenti ${w.feels}°` : ''}</Text>
+      </View>
+      <View style={styles.weatherRight}>
+        <Text style={[styles.wTime, { color: theme.text }]}>{time}</Text>
+        <Text style={[styles.wDate, { color: theme.subtext }]}>{date}</Text>
+      </View>
+    </Glass>
+  );
+}
+
+export default function HomeScreen({ theme, incognito, onOpen, onSearch, onAsk, recent, onOpenBookmarks, onOpenHistory, onOpenSettings, onNewTab }) {
   const [q, setQ] = React.useState('');
-  const [mode, setMode] = React.useState('ia');
+  const [mode, setMode] = React.useState('web');
   const [items, setItems] = React.useState(DEFAULT_ITEMS);
   const [openFolder, setOpenFolder] = React.useState(null);
   const [modal, setModal] = React.useState(null);
@@ -66,7 +128,6 @@ export default function HomeScreen({ theme, incognito, onOpen, onSearch, onAsk }
     setQ('');
   };
 
-  // ---- Opérations raccourcis ----
   const addSite = (name, url, folderId) => {
     const site = { id: sid(), type: 'site', name: name || url, url: normalizeUrl(url), color: PALETTE[(name || url).length % PALETTE.length], label: (name || url).trim().charAt(0).toUpperCase() };
     setItems((prev) => (!folderId ? [...prev, site] : prev.map((it) => (it.id === folderId ? { ...it, items: [...(it.items || []), site] } : it))));
@@ -95,22 +156,30 @@ export default function HomeScreen({ theme, incognito, onOpen, onSearch, onAsk }
     return next.map((it) => (it.id === to ? { ...it, items: [...(it.items || []), site] } : it));
   });
 
-  // ---- Raccourci rond (plus beau) ----
+  const soon = (name) => Alert.alert(name, 'Fonction bientôt disponible 🚧');
+
+  const TOOLS = [
+    { icon: 'download-outline', label: 'Téléchargements', color: '#a855f7', onPress: () => soon('Téléchargements') },
+    { icon: 'star', label: 'Favoris', color: '#f5c518', onPress: onOpenBookmarks },
+    { icon: 'time-outline', label: 'Historique', color: '#34d399', onPress: onOpenHistory },
+    { icon: 'create-outline', label: 'Notes', color: '#8b5cf6', onPress: () => soon('Notes') },
+    { icon: 'shield-checkmark-outline', label: 'VPN', color: '#3b82f6', onPress: () => soon('VPN') },
+    { icon: 'play', label: 'Lecteur Vidéo', color: '#ef4444', onPress: () => soon('Lecteur Vidéo') },
+    { icon: 'color-palette-outline', label: 'Thème', color: '#22d3ee', onPress: onOpenSettings },
+    { icon: 'apps-outline', label: 'Plus d’outils', color: '#f472b6', onPress: onOpenSettings },
+  ];
+
+  const CATEGORIES = ['Actus', 'Tech', 'Gaming', 'Sport'];
+
   const renderRound = (item, parent) => {
     const isFolder = item.type === 'folder';
     return (
-      <Pressable
-        key={item.id}
-        onPress={() => (isFolder ? setOpenFolder(item.id) : onOpen(item.url))}
-        onLongPress={() => setModal({ type: 'context', item, parentFolderId: parent })}
-        delayLongPress={320}
-        style={({ pressed }) => [styles.round, pressed && { transform: [{ scale: 0.93 }] }]}
-      >
+      <Pressable key={item.id} onPress={() => (isFolder ? setOpenFolder(item.id) : onOpen(item.url))}
+        onLongPress={() => setModal({ type: 'context', item, parentFolderId: parent })} delayLongPress={320}
+        style={({ pressed }) => [styles.round, pressed && { transform: [{ scale: 0.93 }] }]}>
         <View style={styles.circleShadow}>
           {isFolder ? (
-            <Glass theme={theme} style={styles.circle} intensity={60} hairline>
-              <Ionicons name="folder" size={22} color={theme.accent} />
-            </Glass>
+            <Glass theme={theme} style={styles.circle} intensity={60} hairline><Ionicons name="folder" size={22} color={theme.accent} /></Glass>
           ) : (
             <View style={[styles.circle, styles.circleRing, { backgroundColor: item.color }]}>
               <Text style={styles.circleLabel}>{item.label || item.name.charAt(0)}</Text>
@@ -123,72 +192,88 @@ export default function HomeScreen({ theme, incognito, onOpen, onSearch, onAsk }
     );
   };
 
-  const AddButtons = () => (
-    <>
-      <Pressable onPress={() => setModal({ type: 'addSite', folderId: null })} style={styles.round}>
-        <View style={styles.circleShadow}><Glass theme={theme} style={styles.circle} intensity={60} hairline><Ionicons name="add" size={26} color={theme.text} /></Glass></View>
-        <Text numberOfLines={1} style={styles.roundName}>Ajouter</Text>
-      </Pressable>
-      <Pressable onPress={() => setModal({ type: 'addFolder' })} style={styles.round}>
-        <View style={styles.circleShadow}><Glass theme={theme} style={styles.circle} intensity={60} hairline><Ionicons name="folder-open-outline" size={21} color={theme.text} /></Glass></View>
-        <Text numberOfLines={1} style={styles.roundName}>Dossier</Text>
-      </Pressable>
-    </>
-  );
-
   return (
     <View style={{ flex: 1 }}>
       <VideoBackground />
-      <LinearGradient colors={['rgba(0,0,0,0.35)', 'rgba(0,0,0,0.15)', 'rgba(0,0,0,0.8)']} locations={[0, 0.5, 1]} style={StyleSheet.absoluteFill} />
+      <LinearGradient colors={['rgba(0,0,0,0.55)', 'rgba(0,0,0,0.35)', 'rgba(0,0,0,0.72)']} locations={[0, 0.4, 1]} style={StyleSheet.absoluteFill} />
 
-      <View style={styles.screen}>
-        {/* CHAT IA centré, style ChatGPT */}
-        <View style={styles.chatWrap}>
-          <View style={[styles.chatLogo, { borderColor: theme.glassBorder }]}>
-            <Ionicons name="sparkles" size={30} color={theme.accent} />
-          </View>
-          <Text style={styles.chatGreeting}>Comment puis-je t’aider ?</Text>
-          {incognito ? <Text style={styles.incognitoTxt}>Navigation privée activée</Text> : null}
+      <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+        {/* Logo */}
+        <Text style={styles.logo}>NE<Text style={{ color: theme.accent }}>XX</Text></Text>
 
-          <View style={styles.chips}>
-            {SUGGESTIONS.map((s) => (
-              <Pressable key={s} onPress={() => { setMode('ia'); send(s); }} style={({ pressed }) => [styles.chipWrap, pressed && { opacity: 0.6 }]}>
-                <Glass theme={theme} style={styles.chip} intensity={45} hairline>
-                  <Text numberOfLines={1} style={styles.chipTxt}>{s}</Text>
-                </Glass>
+        {/* Recherche (glow) */}
+        <View style={[styles.searchGlow, { borderColor: theme.accent, shadowColor: theme.accent }]}>
+          <Glass theme={theme} style={styles.searchBar} intensity={65} border={false}>
+            <Pressable onPress={() => setMode(mode === 'ia' ? 'web' : 'ia')} hitSlop={8} style={{ width: 26, alignItems: 'center' }}>
+              <Ionicons name={mode === 'ia' ? 'sparkles' : 'search'} size={19} color={mode === 'ia' ? theme.accent : theme.subtext} />
+            </Pressable>
+            <TextInput style={styles.searchInput} value={q} onChangeText={setQ} onSubmitEditing={() => send()}
+              placeholder={mode === 'ia' ? 'Demander à l’IA…' : 'Rechercher ou entrer une URL'} placeholderTextColor={theme.subtext}
+              autoCapitalize="none" autoCorrect={false} returnKeyType="go" />
+            <Pressable onPress={() => send()} hitSlop={8}><Ionicons name="arrow-forward-circle" size={26} color={theme.accent} /></Pressable>
+          </Glass>
+        </View>
+        {incognito ? <Text style={styles.incognitoTxt}>🕶️ Navigation privée</Text> : null}
+
+        {/* Raccourcis ronds */}
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.rowShort} keyboardShouldPersistTaps="handled">
+          {items.map((it) => renderRound(it, null))}
+          <Pressable onPress={() => setModal({ type: 'addSite', folderId: null })} style={styles.round}>
+            <View style={styles.circleShadow}><Glass theme={theme} style={styles.circle} intensity={60} hairline><Ionicons name="add" size={26} color={theme.text} /></Glass></View>
+            <Text numberOfLines={1} style={styles.roundName}>Ajouter</Text>
+          </Pressable>
+          <Pressable onPress={() => setModal({ type: 'addFolder' })} style={styles.round}>
+            <View style={styles.circleShadow}><Glass theme={theme} style={styles.circle} intensity={60} hairline><Ionicons name="folder-open-outline" size={21} color={theme.text} /></Glass></View>
+            <Text numberOfLines={1} style={styles.roundName}>Dossier</Text>
+          </Pressable>
+        </ScrollView>
+
+        {/* Catégories */}
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
+          {CATEGORIES.map((c) => (
+            <Pressable key={c} onPress={() => onSearch(c + ' actualités')} style={({ pressed }) => [pressed && { opacity: 0.6 }]}>
+              <Glass theme={theme} style={styles.chip} intensity={45} hairline><Text style={[styles.chipTxt, { color: theme.text }]}>{c}</Text></Glass>
+            </Pressable>
+          ))}
+        </ScrollView>
+
+        {/* Météo + heure */}
+        <WeatherClock theme={theme} />
+
+        {/* Outils rapides */}
+        <Text style={styles.sectionTitle}>OUTILS RAPIDES</Text>
+        <Glass theme={theme} style={styles.toolsCard} intensity={45} hairline>
+          <View style={styles.toolsGrid}>
+            {TOOLS.map((t) => (
+              <Pressable key={t.label} onPress={t.onPress} style={({ pressed }) => [styles.tool, pressed && { opacity: 0.55 }]}>
+                <View style={[styles.toolIcon, { borderColor: t.color }]}><Ionicons name={t.icon} size={24} color={t.color} /></View>
+                <Text numberOfLines={1} style={[styles.toolLabel, { color: theme.text }]}>{t.label}</Text>
               </Pressable>
             ))}
           </View>
+        </Glass>
 
-          <Glass theme={theme} style={styles.promptBar} intensity={75} hairline>
-            <Pressable onPress={() => setMode(mode === 'ia' ? 'web' : 'ia')} hitSlop={8} style={{ width: 28, alignItems: 'center' }}>
-              <Ionicons name={mode === 'ia' ? 'sparkles' : 'globe-outline'} size={20} color={mode === 'ia' ? theme.accent : '#fff'} />
-            </Pressable>
-            <TextInput
-              style={styles.promptInput}
-              value={q}
-              onChangeText={setQ}
-              onSubmitEditing={() => send()}
-              placeholder={mode === 'ia' ? 'Envoyer un message à l’IA…' : 'Rechercher sur le web…'}
-              placeholderTextColor="rgba(255,255,255,0.55)"
-              autoCapitalize="none"
-              autoCorrect={false}
-              returnKeyType="send"
-              multiline
-            />
-            <Pressable onPress={() => send()} hitSlop={8}>
-              <Ionicons name="arrow-up-circle" size={32} color={theme.accent} />
-            </Pressable>
-          </Glass>
-          <Text style={styles.aiHint}>{mode === 'ia' ? 'IA • réponses intelligentes' : 'Recherche web'}</Text>
+        {/* Onglets récents */}
+        <View style={styles.recentHead}>
+          <Text style={styles.sectionTitle}>ONGLETS RÉCENTS</Text>
+          <Pressable onPress={onOpenHistory} hitSlop={8}><Text style={[styles.seeAll, { color: theme.accent }]}>Tout voir</Text></Pressable>
         </View>
-
-        {/* Raccourcis RONDS en bas */}
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.row} keyboardShouldPersistTaps="handled">
-          {items.map((it) => renderRound(it, null))}
-          <AddButtons />
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.recentRow}>
+          {(recent || []).slice(0, 6).map((h) => (
+            <Pressable key={h.id || h.url} onPress={() => onOpen(h.url)} style={({ pressed }) => [pressed && { opacity: 0.7 }]}>
+              <Glass theme={theme} style={styles.recentCard} intensity={45} hairline>
+                <View style={[styles.recentFav, { backgroundColor: theme.inputBg }]}><Text style={{ color: theme.text, fontWeight: '800' }}>{domainOf(h.url).charAt(0).toUpperCase()}</Text></View>
+                <Text numberOfLines={1} style={[styles.recentDomain, { color: theme.subtext }]}>{domainOf(h.url)}</Text>
+              </Glass>
+            </Pressable>
+          ))}
+          <Pressable onPress={onNewTab} style={({ pressed }) => [pressed && { opacity: 0.7 }]}>
+            <Glass theme={theme} style={[styles.recentCard, { alignItems: 'center', justifyContent: 'center' }]} intensity={45} hairline>
+              <Ionicons name="add" size={30} color={theme.subtext} />
+            </Glass>
+          </Pressable>
         </ScrollView>
-      </View>
+      </ScrollView>
 
       {/* Dossier ouvert */}
       <Modal visible={!!currentFolder} transparent animationType="fade" onRequestClose={() => setOpenFolder(null)}>
@@ -209,16 +294,13 @@ export default function HomeScreen({ theme, incognito, onOpen, onSearch, onAsk }
         </View>
       </Modal>
 
-      <SheetModal
-        theme={theme} modal={modal} folders={folders}
-        onClose={() => setModal(null)}
+      <SheetModal theme={theme} modal={modal} folders={folders} onClose={() => setModal(null)}
         onOpenSite={(url) => { setModal(null); onOpen(url); }}
         onAddSite={(name, url, folderId) => { addSite(name, url, folderId); setModal(null); }}
         onAddFolder={(name) => { addFolder(name); setModal(null); }}
         onRename={(id, name, parent) => { renameItem(id, name, parent); setModal(null); }}
         onDelete={(id, parent) => { deleteItem(id, parent); setModal(null); }}
-        onMove={(siteId, from, to) => { moveSite(siteId, from, to); setModal(null); }}
-      />
+        onMove={(siteId, from, to) => { moveSite(siteId, from, to); setModal(null); }} />
     </View>
   );
 }
@@ -229,7 +311,6 @@ function SheetModal({ theme, modal, folders, onClose, onOpenSite, onAddSite, onA
   const [url, setUrl] = React.useState('');
   React.useEffect(() => { setName(''); setUrl(''); }, [modal]);
   if (!modal) return null;
-
   const Header = ({ title }) => (<><View style={[styles.handle, { backgroundColor: theme.border }]} /><Text style={[styles.sheetTitle, { color: theme.text }]}>{title}</Text></>);
   const Row = ({ icon, label, onPress, danger }) => (
     <Pressable onPress={onPress} style={({ pressed }) => [styles.menuRow, pressed && { backgroundColor: theme.inputBg }]}>
@@ -237,7 +318,6 @@ function SheetModal({ theme, modal, folders, onClose, onOpenSite, onAddSite, onA
       <Text style={[styles.menuLabel, { color: danger ? theme.danger : theme.text }]}>{label}</Text>
     </Pressable>
   );
-
   let body = null;
   if (modal.type === 'context') {
     const it = modal.item; const parent = modal.parentFolderId;
@@ -262,7 +342,6 @@ function SheetModal({ theme, modal, folders, onClose, onOpenSite, onAddSite, onA
       <PrimaryBtn theme={theme} label="Créer" disabled={!name.trim()} onPress={() => onAddFolder(name.trim())} />
     </>);
   }
-
   return (
     <Modal visible transparent animationType="slide" onRequestClose={onClose}>
       <Pressable style={styles.backdrop} onPress={onClose}>
@@ -335,26 +414,43 @@ function PrimaryBtn({ theme, label, onPress, disabled }) {
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, justifyContent: 'space-between', paddingTop: 20, paddingBottom: 14 },
-  chatWrap: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 20 },
-  chatLogo: { width: 64, height: 64, borderRadius: 20, borderWidth: 1, backgroundColor: 'rgba(255,255,255,0.06)', alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
-  chatGreeting: { color: '#fff', fontSize: 24, fontWeight: '800', textAlign: 'center', textShadowColor: 'rgba(0,0,0,0.5)', textShadowRadius: 6 },
-  incognitoTxt: { color: 'rgba(255,255,255,0.7)', fontSize: 12, marginTop: 6 },
-  chips: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 8, marginTop: 20, marginBottom: 16 },
-  chipWrap: {},
-  chip: { borderRadius: 16, paddingHorizontal: 14, paddingVertical: 9 },
-  chipTxt: { color: '#fff', fontSize: 13 },
-  promptBar: { flexDirection: 'row', alignItems: 'center', gap: 10, borderRadius: 26, paddingHorizontal: 14, paddingVertical: 8, minHeight: 54, width: '100%' },
-  promptInput: { flex: 1, fontSize: 15.5, color: '#fff', padding: 0, maxHeight: 90 },
-  aiHint: { color: 'rgba(255,255,255,0.5)', fontSize: 11, marginTop: 10 },
-  row: { paddingHorizontal: 14, gap: 12, alignItems: 'flex-start', paddingTop: 6 },
+  scroll: { paddingHorizontal: 16, paddingTop: 6, paddingBottom: 30 },
+  logo: { color: '#fff', fontSize: 30, fontWeight: '900', letterSpacing: 8, textAlign: 'center', marginBottom: 16, marginTop: 4 },
+  searchGlow: { borderWidth: 1.5, borderRadius: 28, shadowOpacity: 0.7, shadowRadius: 12, shadowOffset: { width: 0, height: 0 }, elevation: 8 },
+  searchBar: { flexDirection: 'row', alignItems: 'center', gap: 10, borderRadius: 27, paddingHorizontal: 16, height: 52 },
+  searchInput: { flex: 1, fontSize: 15.5, color: '#fff', padding: 0 },
+  incognitoTxt: { color: 'rgba(255,255,255,0.7)', fontSize: 12, textAlign: 'center', marginTop: 8 },
+  rowShort: { gap: 10, paddingVertical: 18, alignItems: 'flex-start' },
   round: { width: 64, alignItems: 'center' },
   circleShadow: { shadowColor: '#000', shadowOpacity: 0.4, shadowRadius: 6, shadowOffset: { width: 0, height: 3 }, elevation: 5, borderRadius: 28 },
   circle: { width: 56, height: 56, borderRadius: 28, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   circleRing: { borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.28)' },
   circleGloss: { position: 'absolute', top: 0, left: 0, right: 0, height: '55%', borderTopLeftRadius: 28, borderTopRightRadius: 28 },
-  circleLabel: { color: '#fff', fontSize: 22, fontWeight: '800', textShadowColor: 'rgba(0,0,0,0.3)', textShadowRadius: 2 },
+  circleLabel: { color: '#fff', fontSize: 22, fontWeight: '800' },
   roundName: { color: '#fff', fontSize: 11, marginTop: 7, textAlign: 'center', textShadowColor: 'rgba(0,0,0,0.7)', textShadowRadius: 3 },
+  chips: { gap: 10, paddingBottom: 6, alignItems: 'center' },
+  chip: { borderRadius: 18, paddingHorizontal: 18, paddingVertical: 10 },
+  chipTxt: { fontSize: 14, fontWeight: '600' },
+  weather: { borderRadius: 20, padding: 18, marginTop: 16, flexDirection: 'row', justifyContent: 'space-between', overflow: 'hidden' },
+  weatherLeft: {},
+  weatherRight: { alignItems: 'flex-end', justifyContent: 'center' },
+  wCity: { fontSize: 15, fontWeight: '700', marginBottom: 4, letterSpacing: 0.5 },
+  wTemp: { fontSize: 40, fontWeight: '300' },
+  wCond: { fontSize: 12.5, marginTop: 2 },
+  wTime: { fontSize: 34, fontWeight: '300' },
+  wDate: { fontSize: 12.5, marginTop: 2 },
+  sectionTitle: { color: '#fff', fontSize: 13, fontWeight: '800', letterSpacing: 1, marginTop: 22, marginBottom: 12 },
+  toolsCard: { borderRadius: 20, padding: 8 },
+  toolsGrid: { flexDirection: 'row', flexWrap: 'wrap' },
+  tool: { width: '25%', alignItems: 'center', paddingVertical: 12 },
+  toolIcon: { width: 50, height: 50, borderRadius: 15, borderWidth: 1.5, alignItems: 'center', justifyContent: 'center', marginBottom: 7, backgroundColor: 'rgba(255,255,255,0.03)' },
+  toolLabel: { fontSize: 10.5, textAlign: 'center' },
+  recentHead: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between' },
+  seeAll: { fontSize: 13, fontWeight: '600', marginBottom: 12 },
+  recentRow: { gap: 10, paddingBottom: 6 },
+  recentCard: { width: 108, height: 84, borderRadius: 16, padding: 12, justifyContent: 'space-between' },
+  recentFav: { width: 30, height: 30, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
+  recentDomain: { fontSize: 11.5 },
   folderHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 50, paddingHorizontal: 16, paddingBottom: 10 },
   folderTitle: { flex: 1, textAlign: 'center', fontSize: 18, fontWeight: '700', color: '#fff', marginHorizontal: 8 },
   folderGrid: { flexDirection: 'row', flexWrap: 'wrap', padding: 18, gap: 6, justifyContent: 'flex-start' },

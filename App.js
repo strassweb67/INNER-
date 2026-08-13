@@ -279,7 +279,12 @@ function Browser() {
       {/* Contenu (au-dessus de la barre flottante) */}
       <View style={{ flex: 1, backgroundColor: theme.bg, marginBottom: contentBottom }}>
         {onHome ? (
-          <HomeScreen theme={theme} incognito={activeTab.incognito} onOpen={(url) => navigateTo(url)} onSearch={(qq) => navigateTo(qq)} onAsk={openAI} />
+          <HomeScreen
+            theme={theme} incognito={activeTab.incognito}
+            onOpen={(url) => navigateTo(url)} onSearch={(qq) => navigateTo(qq)} onAsk={openAI}
+            recent={history} onOpenBookmarks={() => setView('bookmarks')} onOpenHistory={() => setView('history')}
+            onOpenSettings={() => setView('settings')} onNewTab={() => addTab(false)}
+          />
         ) : (
           <WebView
             key={activeTab.id}
