@@ -26,7 +26,7 @@ import ProgressBar from './src/components/ProgressBar';
 import AddressBar from './src/components/AddressBar';
 import Toolbar from './src/components/Toolbar';
 import LaserBar from './src/components/LaserBar';
-import Menu from './src/components/Menu';
+import SettingsScreen from './src/components/SettingsScreen';
 import TabsScreen from './src/components/TabsScreen';
 import ListScreen from './src/components/ListScreen';
 import HomeScreen from './src/components/HomeScreen';
@@ -86,7 +86,6 @@ function Browser() {
   const [tabs, setTabs] = React.useState([newTab()]);
   const [activeId, setActiveId] = React.useState(() => tabs[0].id);
   const [view, setView] = React.useState('browser');
-  const [menuOpen, setMenuOpen] = React.useState(false);
   const [bookmarks, setBookmarks] = React.useState([]);
   const [history, setHistory] = React.useState([]);
   const [bmChooser, setBmChooser] = React.useState(null); // {url,title}
@@ -183,11 +182,8 @@ function Browser() {
     setBmChooser(null);
   };
 
-  const cycleTheme = () => {
-    const idx = THEME_ORDER.indexOf(themeName);
-    const next = THEME_ORDER[(idx + 1) % THEME_ORDER.length];
-    setThemeName(next); store.saveSettings({ themeName: next });
-  };
+  const pickTheme = (k) => { setThemeName(k); store.saveSettings({ themeName: k }); };
+  const themeOptions = THEME_ORDER.map((k) => ({ key: k, label: THEME_LABELS[k], accent: themes[k].accent, onAccent: themes[k].onAccent }));
   const sharePage = async () => { try { await Share.share({ message: activeTab.currentUrl, url: activeTab.currentUrl }); } catch (e) {} };
 
   const onShouldStart = (req) => {
@@ -203,18 +199,31 @@ function Browser() {
     } catch (err) {}
   };
 
-  const menuActions = {
-    newTab: () => { setMenuOpen(false); addTab(false); },
-    incognito: () => { setMenuOpen(false); addTab(true); },
-    toggleBookmark: () => { setMenuOpen(false); toggleBookmark(); },
-    openBookmarks: () => { setMenuOpen(false); setView('bookmarks'); },
-    openHistory: () => { setMenuOpen(false); setView('history'); },
-    share: () => { setMenuOpen(false); sharePage(); },
-    reload: () => { setMenuOpen(false); reload(); },
-    toggleTheme: () => { cycleTheme(); },
+  const settingsActions = {
+    newTab: () => addTab(false),
+    incognito: () => addTab(true),
+    toggleBookmark: () => toggleBookmark(),
+    openBookmarks: () => setView('bookmarks'),
+    openHistory: () => setView('history'),
+    share: () => sharePage(),
+    reload: () => { reload(); setView('browser'); },
+    home: () => { goHome(); setView('browser'); },
   };
 
   const contentBottom = bottomInset + 8 + BAR_HEIGHT + 6;
+
+  if (view === 'settings') {
+    return (
+      <>
+        <SettingsScreen
+          theme={theme} isBookmarked={isBookmarked} actions={settingsActions}
+          themeOptions={themeOptions} currentThemeKey={themeName} onPickTheme={pickTheme}
+          onClose={() => setView('browser')} bottomInset={bottomInset}
+        />
+        <BookmarkFolderModal theme={theme} visible={!!bmChooser} folders={bookmarkFolders} onClose={() => setBmChooser(null)} onConfirm={confirmBookmark} />
+      </>
+    );
+  }
 
   if (view === 'tabs') {
     return (
@@ -300,12 +309,10 @@ function Browser() {
           <Toolbar
             theme={theme} canGoBack={activeTab.canGoBack} canGoForward={activeTab.canGoForward}
             tabCount={tabs.length} onBack={goBack} onForward={goForward} onHome={goHome}
-            onTabs={() => setView('tabs')} onMenu={() => setMenuOpen(true)}
+            onTabs={() => setView('tabs')} onMenu={() => setView('settings')}
           />
         </LaserBar>
       </View>
-
-      <Menu theme={theme} visible={menuOpen} onClose={() => setMenuOpen(false)} isBookmarked={isBookmarked} actions={menuActions} themeLabel={THEME_LABELS[themeName]} />
 
       {/* Choix du dossier pour un favori */}
       <BookmarkFolderModal
