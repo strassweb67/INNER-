@@ -11,6 +11,7 @@ import {
   View,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { prettyUrl } from '../utils/url';
 
 const TOP = Platform.OS === 'android' ? (RNStatusBar.currentHeight || 24) : 47;
@@ -53,7 +54,9 @@ export default function ListScreen({
   );
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.bg, paddingTop: TOP }]}>
+    <View style={{ flex: 1 }}>
+      <LinearGradient colors={theme.gradientTabs} style={StyleSheet.absoluteFill} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} />
+      <View style={[styles.container, { paddingTop: TOP }]}>
       <View style={[styles.header, { borderBottomColor: theme.border }]}>
         <Pressable onPress={onBack} hitSlop={8} style={styles.headerSide}>
           <Ionicons name="chevron-back" size={26} color={theme.accent} />
@@ -83,6 +86,7 @@ export default function ListScreen({
           renderItem={renderItem}
         />
       )}
+      </View>
     </View>
   );
 }

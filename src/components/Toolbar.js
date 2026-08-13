@@ -1,7 +1,8 @@
-// Barre d'outils du bas : précédent, suivant, accueil, onglets, menu.
+// Barre d'outils du bas (verre) : précédent, suivant, accueil, onglets, menu.
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import Glass from './Glass';
 
 function ToolButton({ name, onPress, disabled, color, badge }) {
   return (
@@ -31,15 +32,18 @@ export default function Toolbar({
   onHome,
   onTabs,
   onMenu,
+  bottomInset = 0,
 }) {
   return (
-    <View style={[styles.bar, { backgroundColor: theme.toolbarBg, borderTopColor: theme.border }]}>
-      <ToolButton name="chevron-back" onPress={onBack} disabled={!canGoBack} color={theme} />
-      <ToolButton name="chevron-forward" onPress={onForward} disabled={!canGoForward} color={theme} />
-      <ToolButton name="home-outline" onPress={onHome} color={theme} />
-      <ToolButton name="copy-outline" onPress={onTabs} color={theme} badge={tabCount} />
-      <ToolButton name="menu" onPress={onMenu} color={theme} />
-    </View>
+    <Glass theme={theme} border={false} hairline intensity={60} style={{ paddingBottom: bottomInset }}>
+      <View style={styles.bar}>
+        <ToolButton name="chevron-back" onPress={onBack} disabled={!canGoBack} color={theme} />
+        <ToolButton name="chevron-forward" onPress={onForward} disabled={!canGoForward} color={theme} />
+        <ToolButton name="home-outline" onPress={onHome} color={theme} />
+        <ToolButton name="copy-outline" onPress={onTabs} color={theme} badge={tabCount} />
+        <ToolButton name="menu" onPress={onMenu} color={theme} />
+      </View>
+    </Glass>
   );
 }
 
@@ -48,16 +52,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-around',
     alignItems: 'center',
-    paddingTop: 8,
-    paddingBottom: 6,
-    borderTopWidth: StyleSheet.hairlineWidth,
+    paddingTop: 9,
+    paddingBottom: 7,
   },
-  btn: {
-    padding: 6,
-    minWidth: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+  btn: { padding: 6, minWidth: 44, alignItems: 'center', justifyContent: 'center' },
   badge: {
     position: 'absolute',
     top: 2,
@@ -70,8 +68,5 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  badgeText: {
-    fontSize: 11,
-    fontWeight: '700',
-  },
+  badgeText: { fontSize: 11, fontWeight: '700' },
 });

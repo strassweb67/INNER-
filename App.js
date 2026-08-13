@@ -325,20 +325,19 @@ function Browser() {
         )}
       </View>
 
-      {/* Barre d'outils du bas */}
-      <View style={{ paddingBottom: BOTTOM_INSET, backgroundColor: theme.toolbarBg }}>
-        <Toolbar
-          theme={theme}
-          canGoBack={activeTab.canGoBack}
-          canGoForward={activeTab.canGoForward}
-          tabCount={tabs.length}
-          onBack={goBack}
-          onForward={goForward}
-          onHome={goHome}
-          onTabs={() => setView('tabs')}
-          onMenu={() => setMenuOpen(true)}
-        />
-      </View>
+      {/* Barre d'outils du bas (verre) */}
+      <Toolbar
+        theme={theme}
+        canGoBack={activeTab.canGoBack}
+        canGoForward={activeTab.canGoForward}
+        tabCount={tabs.length}
+        onBack={goBack}
+        onForward={goForward}
+        onHome={goHome}
+        onTabs={() => setView('tabs')}
+        onMenu={() => setMenuOpen(true)}
+        bottomInset={BOTTOM_INSET}
+      />
 
       <Menu
         theme={theme}

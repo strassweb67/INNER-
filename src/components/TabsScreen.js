@@ -1,5 +1,4 @@
-// Écran de gestion des onglets : aperçu en grille, changement, fermeture, ajout.
-// N'utilise PAS react-native-safe-area-context (marges manuelles).
+// Écran de gestion des onglets : dégradé + cartes en verre.
 import React from 'react';
 import {
   FlatList,
@@ -11,6 +10,8 @@ import {
   View,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
+import Glass from './Glass';
 import { domainOf } from '../utils/url';
 
 const TOP = Platform.OS === 'android' ? (RNStatusBar.currentHeight || 24) : 47;
@@ -31,57 +32,62 @@ export default function TabsScreen({
       ? item.title
       : (item.currentUrl ? domainOf(item.currentUrl) : 'Nouvel onglet');
     return (
-      <Pressable
-        onPress={() => onSelect(item.id)}
-        style={[styles.card, { backgroundColor: theme.card, borderColor: active ? theme.accent : theme.border }]}
-      >
-        <View style={[styles.cardHeader, { borderBottomColor: theme.border }]}>
-          {item.incognito ? (
-            <Ionicons name="eye-off" size={14} color={theme.subtext} />
-          ) : (
-            <Ionicons name="globe-outline" size={14} color={theme.subtext} />
-          )}
-          <Text numberOfLines={1} style={[styles.cardTitle, { color: theme.text }]}>{title}</Text>
-          <Pressable onPress={() => onClose(item.id)} hitSlop={10}>
-            <Ionicons name="close" size={18} color={theme.subtext} />
-          </Pressable>
-        </View>
-        <View style={styles.cardBody}>
-          <Text numberOfLines={4} style={[styles.cardUrl, { color: theme.subtext }]}>
-            {item.currentUrl || 'Page d’accueil'}
-          </Text>
-        </View>
+      <Pressable onPress={() => onSelect(item.id)} style={styles.cardWrap}>
+        <Glass
+          theme={theme}
+          intensity={50}
+          hairline
+          style={[styles.card, { borderColor: active ? theme.accent : theme.glassBorder, borderWidth: active ? 2 : StyleSheet.hairlineWidth }]}
+        >
+          <View style={[styles.cardHeader, { borderBottomColor: theme.glassBorder }]}>
+            <Ionicons name={item.incognito ? 'eye-off' : 'globe-outline'} size={14} color={theme.subtext} />
+            <Text numberOfLines={1} style={[styles.cardTitle, { color: theme.text }]}>{title}</Text>
+            <Pressable onPress={() => onClose(item.id)} hitSlop={10}>
+              <Ionicons name="close" size={18} color={theme.subtext} />
+            </Pressable>
+          </View>
+          <View style={styles.cardBody}>
+            <Text numberOfLines={4} style={[styles.cardUrl, { color: theme.subtext }]}>
+              {item.currentUrl || 'Page d’accueil'}
+            </Text>
+          </View>
+        </Glass>
       </Pressable>
     );
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.chromeBg, paddingTop: TOP }]}>
-      <View style={styles.header}>
-        <Pressable onPress={onCloseAll} hitSlop={8}>
-          <Text style={[styles.headerBtn, { color: theme.accent }]}>Tout fermer</Text>
-        </Pressable>
-        <Text style={[styles.headerTitle, { color: theme.text }]}>
-          {tabs.length} onglet{tabs.length > 1 ? 's' : ''}
-        </Text>
-        <Pressable onPress={onDone} hitSlop={8}>
-          <Text style={[styles.headerBtn, { color: theme.accent, fontWeight: '700' }]}>OK</Text>
+    <View style={{ flex: 1 }}>
+      <LinearGradient colors={theme.gradientTabs} style={StyleSheet.absoluteFill} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} />
+      <View style={[styles.container, { paddingTop: TOP }]}>
+        <View style={styles.header}>
+          <Pressable onPress={onCloseAll} hitSlop={8}>
+            <Text style={[styles.headerBtn, { color: theme.accent }]}>Tout fermer</Text>
+          </Pressable>
+          <Text style={[styles.headerTitle, { color: theme.text }]}>
+            {tabs.length} onglet{tabs.length > 1 ? 's' : ''}
+          </Text>
+          <Pressable onPress={onDone} hitSlop={8}>
+            <Text style={[styles.headerBtn, { color: theme.accent, fontWeight: '700' }]}>OK</Text>
+          </Pressable>
+        </View>
+
+        <FlatList
+          data={tabs}
+          keyExtractor={(t) => t.id}
+          renderItem={renderItem}
+          numColumns={2}
+          columnWrapperStyle={{ gap: 12 }}
+          contentContainerStyle={styles.grid}
+        />
+
+        <Pressable onPress={onNewTab} style={({ pressed }) => [pressed && { opacity: 0.85 }]}>
+          <Glass theme={theme} border hairline intensity={60} style={[styles.newTab, { borderColor: theme.glassBorder }]}>
+            <Ionicons name="add" size={22} color={theme.accent} />
+            <Text style={[styles.newTabText, { color: theme.text }]}>Nouvel onglet</Text>
+          </Glass>
         </Pressable>
       </View>
-
-      <FlatList
-        data={tabs}
-        keyExtractor={(t) => t.id}
-        renderItem={renderItem}
-        numColumns={2}
-        columnWrapperStyle={{ gap: 12 }}
-        contentContainerStyle={styles.grid}
-      />
-
-      <Pressable onPress={onNewTab} style={[styles.newTab, { backgroundColor: theme.accent }]}>
-        <Ionicons name="add" size={22} color="#fff" />
-        <Text style={styles.newTabText}>Nouvel onglet</Text>
-      </Pressable>
     </View>
   );
 }
@@ -98,14 +104,8 @@ const styles = StyleSheet.create({
   headerTitle: { fontSize: 17, fontWeight: '600' },
   headerBtn: { fontSize: 16 },
   grid: { padding: 12, gap: 12 },
-  card: {
-    flex: 1,
-    height: 160,
-    borderRadius: 14,
-    borderWidth: 2,
-    overflow: 'hidden',
-    marginBottom: 12,
-  },
+  cardWrap: { flex: 1, marginBottom: 12 },
+  card: { height: 160, borderRadius: 16, overflow: 'hidden' },
   cardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -125,7 +125,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
     marginBottom: 20,
     paddingVertical: 15,
-    borderRadius: 14,
+    borderRadius: 16,
   },
-  newTabText: { color: '#fff', fontSize: 17, fontWeight: '600' },
+  newTabText: { fontSize: 17, fontWeight: '600' },
 });

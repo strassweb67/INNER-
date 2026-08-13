@@ -2,6 +2,7 @@
 import React from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import Glass from './Glass';
 
 function GridItem({ theme, icon, label, onPress, tint }) {
   return (
@@ -22,10 +23,8 @@ export default function Menu({ theme, visible, onClose, isBookmarked, actions })
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <Pressable style={styles.backdrop} onPress={onClose}>
-        <Pressable
-          style={[styles.sheet, { backgroundColor: theme.card, borderColor: theme.border }]}
-          onPress={() => {}}
-        >
+        <Pressable style={[styles.sheet, { borderColor: theme.glassBorder }]} onPress={() => {}}>
+          <Glass theme={theme} border={false} intensity={70} style={StyleSheet.absoluteFill} />
           <View style={[styles.handle, { backgroundColor: theme.border }]} />
           <ScrollView bounces={false} contentContainerStyle={{ paddingBottom: 24 }}>
             <View style={styles.grid}>
@@ -67,11 +66,12 @@ export default function Menu({ theme, visible, onClose, isBookmarked, actions })
 const styles = StyleSheet.create({
   backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' },
   sheet: {
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    borderTopLeftRadius: 22,
+    borderTopRightRadius: 22,
     paddingTop: 8,
     maxHeight: '70%',
     borderTopWidth: StyleSheet.hairlineWidth,
+    overflow: 'hidden',
   },
   handle: { alignSelf: 'center', width: 40, height: 5, borderRadius: 3, marginVertical: 10 },
   grid: {

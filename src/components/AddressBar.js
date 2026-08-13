@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { prettyUrl } from '../utils/url';
+import Glass from './Glass';
 
 export default function AddressBar({
   theme,
@@ -42,7 +43,7 @@ export default function AddressBar({
   };
 
   return (
-    <View style={[styles.wrap, { backgroundColor: theme.inputBg }]}>
+    <Glass theme={theme} style={styles.wrap} intensity={55} hairline>
       {editing ? (
         <Ionicons name="search" size={16} color={theme.subtext} style={styles.lead} />
       ) : (
@@ -81,18 +82,18 @@ export default function AddressBar({
           <Ionicons name="reload" size={17} color={theme.subtext} />
         </Pressable>
       )}
-    </View>
+    </Glass>
   );
 }
 
 const styles = StyleSheet.create({
   wrap: {
     flex: 1,
-    height: 40,
-    borderRadius: 11,
+    height: 44,
+    borderRadius: 14,
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 10,
+    paddingHorizontal: 12,
   },
   lead: { marginRight: 7 },
   trail: { marginLeft: 7, width: 20, alignItems: 'center' },
