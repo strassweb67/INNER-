@@ -18,7 +18,7 @@ function GridItem({ theme, icon, label, onPress, tint }) {
   );
 }
 
-export default function Menu({ theme, visible, onClose, isBookmarked, actions }) {
+export default function Menu({ theme, visible, onClose, isBookmarked, actions, themeLabel }) {
   const run = (fn) => () => { if (fn) fn(); };
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
@@ -44,8 +44,8 @@ export default function Menu({ theme, visible, onClose, isBookmarked, actions })
               <GridItem theme={theme} icon="reload-outline" label="Recharger" onPress={run(actions.reload)} />
               <GridItem
                 theme={theme}
-                icon={theme.mode === 'dark' ? 'sunny-outline' : 'moon-outline'}
-                label={theme.mode === 'dark' ? 'Mode clair' : 'Mode sombre'}
+                icon="color-palette-outline"
+                label={`Thème : ${themeLabel || ''}`}
                 onPress={run(actions.toggleTheme)}
               />
             </View>

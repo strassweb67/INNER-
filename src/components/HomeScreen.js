@@ -1,8 +1,8 @@
-// Page d'accueil : recherche + raccourcis + DOSSIERS.
-// Appui long => menu (ouvrir, renommer, déplacer vers dossier, supprimer).
-// Ajout de raccourcis, création/renommage/suppression de dossiers.
+// Page d'accueil : fond Lamborghini + barre chat IA + raccourcis RONDS sur une ligne en bas.
+// Dossiers, appui long (renommer / déplacer / supprimer), ajout.
 import React from 'react';
 import {
+  ImageBackground,
   Modal,
   Pressable,
   ScrollView,
@@ -16,8 +16,9 @@ import { LinearGradient } from 'expo-linear-gradient';
 import Glass from './Glass';
 import * as store from '../utils/storage';
 
-const PALETTE = ['#4285F4', '#FF0000', '#1877F2', '#E4405F', '#111827', '#24292e', '#FF9900', '#FF3333', '#9146FF', '#25D366', '#00A1F1', '#FF6600'];
+const WALLPAPER = require('../../assets/wallpaper.jpg');
 
+const PALETTE = ['#4285F4', '#FF0000', '#1877F2', '#E4405F', '#111827', '#24292e', '#FF9900', '#FF3333', '#9146FF', '#25D366', '#00A1F1', '#FF6600'];
 let _sid = 0;
 const sid = () => `s_${Date.now().toString(36)}_${_sid++}`;
 
@@ -39,11 +40,12 @@ function normalizeUrl(u) {
   return 'https://' + t;
 }
 
-export default function HomeScreen({ theme, incognito, onOpen, onSearch }) {
+export default function HomeScreen({ theme, incognito, onOpen, onSearch, onAsk }) {
   const [q, setQ] = React.useState('');
+  const [mode, setMode] = React.useState('ia'); // 'ia' | 'web'
   const [items, setItems] = React.useState(DEFAULT_ITEMS);
-  const [openFolder, setOpenFolder] = React.useState(null); // id du dossier ouvert
-  const [modal, setModal] = React.useState(null); // {type, ...}
+  const [openFolder, setOpenFolder] = React.useState(null);
+  const [modal, setModal] = React.useState(null);
   const [loaded, setLoaded] = React.useState(false);
 
   React.useEffect(() => {
@@ -53,217 +55,156 @@ export default function HomeScreen({ theme, incognito, onOpen, onSearch }) {
       setLoaded(true);
     })();
   }, []);
-
-  React.useEffect(() => {
-    if (loaded) store.saveShortcuts(items);
-  }, [items, loaded]);
+  React.useEffect(() => { if (loaded) store.saveShortcuts(items); }, [items, loaded]);
 
   const folders = items.filter((i) => i.type === 'folder');
   const currentFolder = openFolder ? items.find((i) => i.id === openFolder && i.type === 'folder') : null;
 
   const submit = () => {
     const v = q.trim();
-    if (v) onSearch(v);
+    if (!v) return;
+    if (mode === 'ia') onAsk(v); else onSearch(v);
+    setQ('');
   };
 
   // ---- Opérations ----
   const addSite = (name, url, folderId) => {
     const site = {
-      id: sid(),
-      type: 'site',
-      name: name || url,
-      url: normalizeUrl(url),
+      id: sid(), type: 'site', name: name || url, url: normalizeUrl(url),
       color: PALETTE[(name || url).length % PALETTE.length],
       label: (name || url).trim().charAt(0).toUpperCase(),
     };
-    setItems((prev) => {
-      if (!folderId) return [...prev, site];
-      return prev.map((it) => (it.id === folderId ? { ...it, items: [...(it.items || []), site] } : it));
+    setItems((prev) => (!folderId ? [...prev, site] : prev.map((it) => (it.id === folderId ? { ...it, items: [...(it.items || []), site] } : it))));
+  };
+  const addFolder = (name) => setItems((prev) => [...prev, { id: 'f_' + sid(), type: 'folder', name: name || 'Dossier', items: [] }]);
+  const renameItem = (id, name, parent) => setItems((prev) => prev.map((it) => {
+    if (parent && it.id === parent) return { ...it, items: (it.items || []).map((c) => (c.id === id ? { ...c, name } : c)) };
+    if (!parent && it.id === id) return { ...it, name };
+    return it;
+  }));
+  const deleteItem = (id, parent) => setItems((prev) => {
+    if (parent) return prev.map((it) => (it.id === parent ? { ...it, items: (it.items || []).filter((c) => c.id !== id) } : it));
+    const target = prev.find((it) => it.id === id);
+    if (target && target.type === 'folder' && (target.items || []).length) return [...prev.filter((it) => it.id !== id), ...target.items];
+    return prev.filter((it) => it.id !== id);
+  });
+  const moveSite = (siteId, from, to) => setItems((prev) => {
+    let site = null;
+    let next = prev.map((it) => {
+      if (from && it.id === from) { const f = (it.items || []).find((c) => c.id === siteId); if (f) site = f; return { ...it, items: (it.items || []).filter((c) => c.id !== siteId) }; }
+      return it;
     });
-  };
+    if (!from) { site = prev.find((it) => it.id === siteId) || null; next = next.filter((it) => it.id !== siteId); }
+    if (!site) return prev;
+    if (!to) return [...next, site];
+    return next.map((it) => (it.id === to ? { ...it, items: [...(it.items || []), site] } : it));
+  });
 
-  const addFolder = (name) => {
-    setItems((prev) => [...prev, { id: 'f_' + sid(), type: 'folder', name: name || 'Dossier', items: [] }]);
-  };
-
-  const renameItem = (id, name, parentFolderId) => {
-    setItems((prev) =>
-      prev.map((it) => {
-        if (parentFolderId && it.id === parentFolderId) {
-          return { ...it, items: (it.items || []).map((c) => (c.id === id ? { ...c, name } : c)) };
-        }
-        if (!parentFolderId && it.id === id) return { ...it, name };
-        return it;
-      })
-    );
-  };
-
-  const deleteItem = (id, parentFolderId) => {
-    setItems((prev) => {
-      if (parentFolderId) {
-        return prev.map((it) => (it.id === parentFolderId ? { ...it, items: (it.items || []).filter((c) => c.id !== id) } : it));
-      }
-      const target = prev.find((it) => it.id === id);
-      // supprimer un dossier : on remonte ses raccourcis à la racine
-      if (target && target.type === 'folder' && (target.items || []).length) {
-        return [...prev.filter((it) => it.id !== id), ...target.items];
-      }
-      return prev.filter((it) => it.id !== id);
-    });
-  };
-
-  const moveSite = (siteId, fromFolderId, toFolderId) => {
-    setItems((prev) => {
-      let site = null;
-      let next = prev.map((it) => {
-        if (fromFolderId && it.id === fromFolderId) {
-          const found = (it.items || []).find((c) => c.id === siteId);
-          if (found) site = found;
-          return { ...it, items: (it.items || []).filter((c) => c.id !== siteId) };
-        }
-        return it;
-      });
-      if (!fromFolderId) {
-        site = prev.find((it) => it.id === siteId) || null;
-        next = next.filter((it) => it.id !== siteId);
-      }
-      if (!site) return prev;
-      if (!toFolderId) return [...next, site];
-      return next.map((it) => (it.id === toFolderId ? { ...it, items: [...(it.items || []), site] } : it));
-    });
-  };
-
-  // ---- Rendu d'une tuile ----
-  const renderTile = (item, parentFolderId) => {
-    if (item.type === 'folder') {
-      const preview = (item.items || []).slice(0, 4);
-      return (
-        <Pressable
-          key={item.id}
-          onPress={() => setOpenFolder(item.id)}
-          onLongPress={() => setModal({ type: 'context', item, parentFolderId: null })}
-          delayLongPress={350}
-          style={({ pressed }) => [styles.tileWrap, pressed && { opacity: 0.6 }]}
-        >
-          <Glass theme={theme} style={styles.tile} intensity={50} hairline>
-            <View style={styles.folderIcon}>
-              {preview.length ? (
-                <View style={styles.folderPreview}>
-                  {preview.map((c) => (
-                    <View key={c.id} style={[styles.folderDot, { backgroundColor: c.color || theme.accent }]}>
-                      <Text style={styles.folderDotLabel}>{c.label || c.name.charAt(0)}</Text>
-                    </View>
-                  ))}
-                </View>
-              ) : (
-                <Ionicons name="folder-outline" size={26} color={theme.text} />
-              )}
-            </View>
-            <Text numberOfLines={1} style={[styles.tileName, { color: theme.text }]}>{item.name}</Text>
-          </Glass>
-        </Pressable>
-      );
-    }
+  // ---- Raccourci rond ----
+  const renderRound = (item, parent) => {
+    const isFolder = item.type === 'folder';
     return (
       <Pressable
         key={item.id}
-        onPress={() => onOpen(item.url)}
-        onLongPress={() => setModal({ type: 'context', item, parentFolderId })}
-        delayLongPress={350}
-        style={({ pressed }) => [styles.tileWrap, pressed && { opacity: 0.6, transform: [{ scale: 0.96 }] }]}
+        onPress={() => (isFolder ? setOpenFolder(item.id) : onOpen(item.url))}
+        onLongPress={() => setModal({ type: 'context', item, parentFolderId: parent })}
+        delayLongPress={320}
+        style={({ pressed }) => [styles.round, pressed && { opacity: 0.6, transform: [{ scale: 0.94 }] }]}
       >
-        <Glass theme={theme} style={styles.tile} intensity={50} hairline>
-          <View style={[styles.tileIcon, { backgroundColor: item.color }]}>
-            <Text style={styles.tileLabel}>{item.label || item.name.charAt(0)}</Text>
+        {isFolder ? (
+          <Glass theme={theme} style={styles.circle} intensity={55} hairline>
+            <Ionicons name="folder" size={22} color={theme.accent} />
+          </Glass>
+        ) : (
+          <View style={[styles.circle, { backgroundColor: item.color }]}>
+            <Text style={styles.circleLabel}>{item.label || item.name.charAt(0)}</Text>
           </View>
-          <Text numberOfLines={1} style={[styles.tileName, { color: theme.text }]}>{item.name}</Text>
-        </Glass>
+        )}
+        <Text numberOfLines={1} style={styles.roundName}>{item.name}</Text>
       </Pressable>
     );
   };
 
+  const AddButtons = () => (
+    <>
+      <Pressable onPress={() => setModal({ type: 'addSite', folderId: null })} style={({ pressed }) => [styles.round, pressed && { opacity: 0.6 }]}>
+        <Glass theme={theme} style={styles.circle} intensity={55} hairline><Ionicons name="add" size={26} color={theme.text} /></Glass>
+        <Text numberOfLines={1} style={styles.roundName}>Ajouter</Text>
+      </Pressable>
+      <Pressable onPress={() => setModal({ type: 'addFolder' })} style={({ pressed }) => [styles.round, pressed && { opacity: 0.6 }]}>
+        <Glass theme={theme} style={styles.circle} intensity={55} hairline><Ionicons name="folder-open-outline" size={22} color={theme.text} /></Glass>
+        <Text numberOfLines={1} style={styles.roundName}>Dossier</Text>
+      </Pressable>
+    </>
+  );
+
   return (
-    <View style={{ flex: 1 }}>
-      <LinearGradient colors={theme.gradient} style={StyleSheet.absoluteFill} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} />
-      <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+    <ImageBackground source={WALLPAPER} resizeMode="cover" style={{ flex: 1 }}>
+      {/* Voile sombre en bas pour la lisibilité */}
+      <LinearGradient
+        colors={['transparent', 'rgba(0,0,0,0.25)', 'rgba(0,0,0,0.82)']}
+        locations={[0, 0.45, 1]}
+        style={StyleSheet.absoluteFill}
+      />
+
+      <View style={styles.bottomWrap}>
         {incognito ? (
-          <Glass theme={theme} style={styles.incognitoBanner} intensity={40}>
-            <Ionicons name="eye-off" size={16} color={theme.text} />
-            <Text style={{ color: theme.text, fontSize: 13, fontWeight: '600' }}>Navigation privée</Text>
+          <Glass theme={theme} style={styles.incognitoBanner} intensity={45}>
+            <Ionicons name="eye-off" size={15} color="#fff" />
+            <Text style={{ color: '#fff', fontSize: 12, fontWeight: '600' }}>Navigation privée</Text>
           </Glass>
         ) : null}
 
-        <Text style={[styles.brand, { color: theme.text }]}>Mon Navigateur</Text>
-
-        <Glass theme={theme} style={styles.searchBar} intensity={60} hairline>
-          <Ionicons name="search" size={18} color={theme.subtext} />
+        {/* Barre CHAT IA */}
+        <Glass theme={theme} style={styles.aiBar} intensity={70} hairline>
+          <Pressable onPress={() => setMode(mode === 'ia' ? 'web' : 'ia')} hitSlop={8} style={styles.aiModeBtn}>
+            <Ionicons name={mode === 'ia' ? 'sparkles' : 'globe-outline'} size={20} color={mode === 'ia' ? theme.accent : '#fff'} />
+          </Pressable>
           <TextInput
-            style={[styles.searchInput, { color: theme.text }]}
+            style={styles.aiInput}
             value={q}
             onChangeText={setQ}
             onSubmitEditing={submit}
-            placeholder="Rechercher ou saisir une adresse"
-            placeholderTextColor={theme.subtext}
+            placeholder={mode === 'ia' ? 'Demander à l’IA…' : 'Rechercher sur le web…'}
+            placeholderTextColor="rgba(255,255,255,0.6)"
             autoCapitalize="none"
             autoCorrect={false}
             returnKeyType="go"
           />
-          {q.length > 0 ? (
-            <Pressable onPress={() => setQ('')} hitSlop={10}>
-              <Ionicons name="close-circle" size={18} color={theme.subtext} />
-            </Pressable>
-          ) : null}
+          <Pressable onPress={submit} hitSlop={8}>
+            <Ionicons name="arrow-up-circle" size={30} color={theme.accent} />
+          </Pressable>
         </Glass>
 
-        <View style={styles.sectionRow}>
-          <Text style={[styles.sectionTitle, { color: theme.text }]}>Sites favoris</Text>
-          <View style={{ flexDirection: 'row', gap: 14 }}>
-            <Pressable onPress={() => setModal({ type: 'addFolder' })} hitSlop={8}>
-              <Ionicons name="folder-open-outline" size={22} color={theme.accent} />
-            </Pressable>
-            <Pressable onPress={() => setModal({ type: 'addSite', folderId: null })} hitSlop={8}>
-              <Ionicons name="add-circle-outline" size={24} color={theme.accent} />
-            </Pressable>
-          </View>
-        </View>
+        {/* Raccourcis RONDS sur une ligne */}
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.row} keyboardShouldPersistTaps="handled">
+          {items.map((it) => renderRound(it, null))}
+          <AddButtons />
+        </ScrollView>
+      </View>
 
-        <View style={styles.grid}>
-          {items.map((it) => renderTile(it, null))}
-        </View>
-        <Text style={[styles.hint, { color: theme.subtext }]}>Astuce : appui long sur un raccourci pour le modifier, le déplacer ou le supprimer.</Text>
-      </ScrollView>
-
-      {/* --- Dossier ouvert --- */}
+      {/* Dossier ouvert */}
       <Modal visible={!!currentFolder} transparent animationType="fade" onRequestClose={() => setOpenFolder(null)}>
-        <View style={styles.folderOverlay}>
-          <LinearGradient colors={theme.gradient} style={StyleSheet.absoluteFill} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} />
+        <View style={{ flex: 1 }}>
+          <ImageBackground source={WALLPAPER} resizeMode="cover" style={StyleSheet.absoluteFill}>
+            <LinearGradient colors={['rgba(0,0,0,0.7)', 'rgba(0,0,0,0.88)']} style={StyleSheet.absoluteFill} />
+          </ImageBackground>
           <View style={styles.folderHeader}>
-            <Pressable onPress={() => setOpenFolder(null)} hitSlop={8}>
-              <Ionicons name="chevron-back" size={26} color={theme.accent} />
-            </Pressable>
-            <Text numberOfLines={1} style={[styles.folderTitle, { color: theme.text }]}>{currentFolder ? currentFolder.name : ''}</Text>
-            <Pressable onPress={() => setModal({ type: 'addSite', folderId: openFolder })} hitSlop={8}>
-              <Ionicons name="add-circle-outline" size={24} color={theme.accent} />
-            </Pressable>
+            <Pressable onPress={() => setOpenFolder(null)} hitSlop={8}><Ionicons name="chevron-back" size={26} color="#fff" /></Pressable>
+            <Text numberOfLines={1} style={styles.folderTitle}>{currentFolder ? currentFolder.name : ''}</Text>
+            <Pressable onPress={() => setModal({ type: 'addSite', folderId: openFolder })} hitSlop={8}><Ionicons name="add-circle-outline" size={24} color="#fff" /></Pressable>
           </View>
-          <ScrollView contentContainerStyle={styles.content}>
-            <View style={styles.grid}>
-              {currentFolder && (currentFolder.items || []).map((c) => renderTile(c, currentFolder.id))}
-            </View>
+          <ScrollView contentContainerStyle={styles.folderGrid}>
+            {currentFolder && (currentFolder.items || []).map((c) => renderRound(c, currentFolder.id))}
             {currentFolder && (currentFolder.items || []).length === 0 ? (
-              <Text style={[styles.hint, { color: theme.subtext, textAlign: 'center', marginTop: 30 }]}>
-                Dossier vide. Touche + pour ajouter un raccourci.
-              </Text>
+              <Text style={{ color: 'rgba(255,255,255,0.6)', textAlign: 'center', width: '100%', marginTop: 30 }}>Dossier vide. Touche + pour ajouter.</Text>
             ) : null}
           </ScrollView>
         </View>
       </Modal>
 
-      {/* --- Menus / formulaires --- */}
       <SheetModal
-        theme={theme}
-        modal={modal}
-        folders={folders}
+        theme={theme} modal={modal} folders={folders}
         onClose={() => setModal(null)}
         onOpenSite={(url) => { setModal(null); onOpen(url); }}
         onAddSite={(name, url, folderId) => { addSite(name, url, folderId); setModal(null); }}
@@ -272,22 +213,15 @@ export default function HomeScreen({ theme, incognito, onOpen, onSearch }) {
         onDelete={(id, parent) => { deleteItem(id, parent); setModal(null); }}
         onMove={(siteId, from, to) => { moveSite(siteId, from, to); setModal(null); }}
       />
-    </View>
+    </ImageBackground>
   );
 }
 
-// ---------- Modale multi-usage (contexte, ajout, renommage, déplacement) ----------
+// ---------- Modale multi-usage ----------
 function SheetModal({ theme, modal, folders, onClose, onOpenSite, onAddSite, onAddFolder, onRename, onDelete, onMove }) {
   const [name, setName] = React.useState('');
   const [url, setUrl] = React.useState('');
-
-  React.useEffect(() => {
-    if (!modal) return;
-    if (modal.type === 'rename') setName(modal.item.name);
-    else setName('');
-    setUrl('');
-  }, [modal]);
-
+  React.useEffect(() => { setName(''); setUrl(''); }, [modal]);
   if (!modal) return null;
 
   const Header = ({ title }) => (
@@ -296,7 +230,6 @@ function SheetModal({ theme, modal, folders, onClose, onOpenSite, onAddSite, onA
       <Text style={[styles.sheetTitle, { color: theme.text }]}>{title}</Text>
     </>
   );
-
   const Row = ({ icon, label, onPress, danger }) => (
     <Pressable onPress={onPress} style={({ pressed }) => [styles.menuRow, pressed && { backgroundColor: theme.inputBg }]}>
       <Ionicons name={icon} size={21} color={danger ? theme.danger : theme.text} style={{ width: 30 }} />
@@ -305,18 +238,14 @@ function SheetModal({ theme, modal, folders, onClose, onOpenSite, onAddSite, onA
   );
 
   let body = null;
-
   if (modal.type === 'context') {
-    const it = modal.item;
-    const parent = modal.parentFolderId;
+    const it = modal.item; const parent = modal.parentFolderId;
     body = (
       <>
         <Header title={it.name} />
         {it.type === 'site' ? <Row icon="open-outline" label="Ouvrir" onPress={() => onOpenSite(it.url)} /> : null}
         <RenameInline theme={theme} item={it} parent={parent} onRename={onRename} />
-        {it.type === 'site' ? (
-          <MoveInline theme={theme} item={it} parent={parent} folders={folders} onMove={onMove} />
-        ) : null}
+        {it.type === 'site' ? <MoveInline theme={theme} item={it} parent={parent} folders={folders} onMove={onMove} /> : null}
         <Row icon="trash-outline" label="Supprimer" danger onPress={() => onDelete(it.id, parent)} />
       </>
     );
@@ -343,7 +272,7 @@ function SheetModal({ theme, modal, folders, onClose, onOpenSite, onAddSite, onA
     <Modal visible transparent animationType="slide" onRequestClose={onClose}>
       <Pressable style={styles.backdrop} onPress={onClose}>
         <Pressable style={[styles.sheet, { borderColor: theme.glassBorder }]} onPress={() => {}}>
-          <Glass theme={theme} border={false} intensity={75} style={StyleSheet.absoluteFill} />
+          <Glass theme={theme} border={false} intensity={80} style={StyleSheet.absoluteFill} />
           <ScrollView bounces={false} contentContainerStyle={{ paddingBottom: 26 }}>{body}</ScrollView>
         </Pressable>
       </Pressable>
@@ -364,14 +293,8 @@ function RenameInline({ theme, item, parent, onRename }) {
   }
   return (
     <View style={{ paddingHorizontal: 18, paddingVertical: 8 }}>
-      <TextInput
-        value={val}
-        onChangeText={setVal}
-        autoFocus
-        placeholder="Nouveau nom"
-        placeholderTextColor={theme.subtext}
-        style={[styles.input, { color: theme.text, backgroundColor: theme.inputBg }]}
-      />
+      <TextInput value={val} onChangeText={setVal} autoFocus placeholder="Nouveau nom" placeholderTextColor={theme.subtext}
+        style={[styles.input, { color: theme.text, backgroundColor: theme.inputBg }]} />
       <PrimaryBtn theme={theme} label="Enregistrer" disabled={!val.trim()} onPress={() => onRename(item.id, val.trim(), parent)} />
     </View>
   );
@@ -393,7 +316,7 @@ function MoveInline({ theme, item, parent, folders, onMove }) {
       {parent ? (
         <Pressable onPress={() => onMove(item.id, parent, null)} style={({ pressed }) => [styles.menuRow, pressed && { backgroundColor: theme.inputBg }]}>
           <Ionicons name="arrow-up-outline" size={21} color={theme.text} style={{ width: 30 }} />
-          <Text style={[styles.menuLabel, { color: theme.text }]}>Sortir du dossier (racine)</Text>
+          <Text style={[styles.menuLabel, { color: theme.text }]}>Sortir du dossier</Text>
         </Pressable>
       ) : null}
       {targets.length === 0 ? (
@@ -412,62 +335,47 @@ function Field({ theme, label, value, onChange, placeholder, keyboardType }) {
   return (
     <View style={{ paddingHorizontal: 18, marginBottom: 12 }}>
       <Text style={{ color: theme.subtext, fontSize: 12, marginBottom: 6 }}>{label}</Text>
-      <TextInput
-        value={value}
-        onChangeText={onChange}
-        placeholder={placeholder}
-        placeholderTextColor={theme.subtext}
-        keyboardType={keyboardType}
-        autoCapitalize="none"
-        autoCorrect={false}
-        style={[styles.input, { color: theme.text, backgroundColor: theme.inputBg }]}
-      />
+      <TextInput value={value} onChangeText={onChange} placeholder={placeholder} placeholderTextColor={theme.subtext}
+        keyboardType={keyboardType} autoCapitalize="none" autoCorrect={false}
+        style={[styles.input, { color: theme.text, backgroundColor: theme.inputBg }]} />
     </View>
   );
 }
 
 function PrimaryBtn({ theme, label, onPress, disabled }) {
   return (
-    <Pressable
-      onPress={disabled ? undefined : onPress}
-      style={({ pressed }) => [styles.primaryBtn, { backgroundColor: disabled ? theme.subtext : theme.accent }, pressed && !disabled && { opacity: 0.85 }]}
-    >
-      <Text style={{ color: '#fff', fontSize: 16, fontWeight: '700' }}>{label}</Text>
+    <Pressable onPress={disabled ? undefined : onPress}
+      style={({ pressed }) => [styles.primaryBtn, { backgroundColor: disabled ? theme.subtext : theme.accent }, pressed && !disabled && { opacity: 0.85 }]}>
+      <Text style={{ color: theme.onAccent || '#fff', fontSize: 16, fontWeight: '700' }}>{label}</Text>
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
-  content: { padding: 18, paddingTop: 30, paddingBottom: 120 },
+  bottomWrap: { flex: 1, justifyContent: 'flex-end', paddingBottom: 14 },
   incognitoBanner: {
-    flexDirection: 'row', alignItems: 'center', gap: 8, alignSelf: 'center',
-    paddingHorizontal: 16, paddingVertical: 9, borderRadius: 22, marginBottom: 18,
+    flexDirection: 'row', alignItems: 'center', gap: 7, alignSelf: 'center',
+    paddingHorizontal: 14, paddingVertical: 7, borderRadius: 20, marginBottom: 14,
   },
-  brand: { fontSize: 28, fontWeight: '800', textAlign: 'center', marginBottom: 22, letterSpacing: 0.3 },
-  searchBar: {
-    flexDirection: 'row', alignItems: 'center', gap: 10, borderRadius: 26,
-    paddingHorizontal: 18, height: 52, marginBottom: 26,
+  aiBar: {
+    flexDirection: 'row', alignItems: 'center', gap: 10,
+    marginHorizontal: 14, borderRadius: 26, paddingHorizontal: 14, height: 54, marginBottom: 14,
   },
-  searchInput: { flex: 1, fontSize: 16, padding: 0 },
-  sectionRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, paddingHorizontal: 4 },
-  sectionTitle: { fontSize: 15, fontWeight: '700' },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'flex-start' },
-  tileWrap: { width: '25%', paddingHorizontal: 4, marginBottom: 14 },
-  tile: { borderRadius: 20, paddingVertical: 12, alignItems: 'center', justifyContent: 'center' },
-  tileIcon: { width: 46, height: 46, borderRadius: 14, alignItems: 'center', justifyContent: 'center', marginBottom: 7 },
-  tileLabel: { color: '#fff', fontSize: 22, fontWeight: '800' },
-  tileName: { fontSize: 11, textAlign: 'center' },
-  folderIcon: { width: 46, height: 46, borderRadius: 14, alignItems: 'center', justifyContent: 'center', marginBottom: 7, backgroundColor: 'rgba(128,128,128,0.18)' },
-  folderPreview: { width: 34, height: 34, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', alignContent: 'space-between' },
-  folderDot: { width: 15, height: 15, borderRadius: 5, alignItems: 'center', justifyContent: 'center' },
-  folderDotLabel: { color: '#fff', fontSize: 9, fontWeight: '800' },
-  hint: { fontSize: 12, marginTop: 8, paddingHorizontal: 4, lineHeight: 17 },
+  aiModeBtn: { width: 26, alignItems: 'center' },
+  aiInput: { flex: 1, fontSize: 15.5, color: '#fff', padding: 0 },
+  row: { paddingHorizontal: 14, gap: 14, alignItems: 'flex-start' },
+  round: { width: 64, alignItems: 'center' },
+  circle: {
+    width: 54, height: 54, borderRadius: 27, alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
+  },
+  circleLabel: { color: '#fff', fontSize: 22, fontWeight: '800' },
+  roundName: { color: '#fff', fontSize: 11, marginTop: 6, textAlign: 'center', textShadowColor: 'rgba(0,0,0,0.6)', textShadowRadius: 3 },
   // folder overlay
-  folderOverlay: { flex: 1 },
-  folderHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 44, paddingHorizontal: 16, paddingBottom: 8 },
-  folderTitle: { flex: 1, textAlign: 'center', fontSize: 18, fontWeight: '700', marginHorizontal: 8 },
+  folderHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 50, paddingHorizontal: 16, paddingBottom: 10 },
+  folderTitle: { flex: 1, textAlign: 'center', fontSize: 18, fontWeight: '700', color: '#fff', marginHorizontal: 8 },
+  folderGrid: { flexDirection: 'row', flexWrap: 'wrap', padding: 18, gap: 6, justifyContent: 'flex-start' },
   // sheet
-  backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' },
+  backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'flex-end' },
   sheet: { borderTopLeftRadius: 22, borderTopRightRadius: 22, paddingTop: 8, maxHeight: '80%', borderTopWidth: StyleSheet.hairlineWidth, overflow: 'hidden' },
   handle: { alignSelf: 'center', width: 40, height: 5, borderRadius: 3, marginVertical: 8 },
   sheetTitle: { fontSize: 17, fontWeight: '700', textAlign: 'center', marginBottom: 10, paddingHorizontal: 16 },

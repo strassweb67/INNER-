@@ -4,7 +4,7 @@ import { Animated, Easing, StyleSheet, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Glass from './Glass';
 
-export default function LaserBar({ theme, radius = 28, intensity = 75, children, style }) {
+export default function LaserBar({ theme, radius = 31, intensity = 80, children, style }) {
   const spin = React.useRef(new Animated.Value(0)).current;
 
   React.useEffect(() => {

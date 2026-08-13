@@ -13,13 +13,12 @@ import {
   Text,
   TextInput,
   View,
-  useColorScheme,
 } from 'react-native';
 import { WebView } from 'react-native-webview';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 
-import { darkTheme, lightTheme } from './src/theme';
+import { themes, THEME_ORDER, THEME_LABELS } from './src/theme';
 import { toUrl, domainOf } from './src/utils/url';
 import * as store from './src/utils/storage';
 
@@ -81,12 +80,8 @@ function Browser() {
   const topInset = Math.max(insets.top, Platform.OS === 'android' ? (RNStatusBar.currentHeight || 0) : 0);
   const bottomInset = Math.max(insets.bottom, 8);
 
-  const scheme = useColorScheme();
-  const [themePref, setThemePref] = React.useState('auto');
-  const theme = React.useMemo(() => {
-    const resolved = themePref === 'auto' ? scheme : themePref;
-    return resolved === 'dark' ? darkTheme : lightTheme;
-  }, [themePref, scheme]);
+  const [themeName, setThemeName] = React.useState('bleuNuit');
+  const theme = themes[themeName] || themes.bleuNuit;
 
   const [tabs, setTabs] = React.useState([newTab()]);
   const [activeId, setActiveId] = React.useState(() => tabs[0].id);
@@ -115,7 +110,7 @@ function Browser() {
         const [b, h, s] = await Promise.all([store.loadBookmarks(), store.loadHistory(), store.loadSettings()]);
         setBookmarks(Array.isArray(b) ? b : []);
         setHistory(Array.isArray(h) ? h : []);
-        if (s && s.theme) setThemePref(s.theme);
+        if (s && s.themeName && themes[s.themeName]) setThemeName(s.themeName);
       } catch (e) {}
     })();
   }, []);
@@ -138,6 +133,13 @@ function Browser() {
   const navigateTo = React.useCallback((input, id = activeId) => {
     const target = toUrl(input);
     setTabs((prev) => prev.map((t) => (t.id === id ? { ...t, url: target, currentUrl: target } : t)));
+    setView('browser');
+  }, [activeId]);
+
+  // Recherche IA (chat) -> moteur de réponse IA
+  const openAI = React.useCallback((query) => {
+    const target = 'https://www.perplexity.ai/search?q=' + encodeURIComponent(query);
+    setTabs((prev) => prev.map((t) => (t.id === activeId ? { ...t, url: target, currentUrl: target } : t)));
     setView('browser');
   }, [activeId]);
 
@@ -181,9 +183,10 @@ function Browser() {
     setBmChooser(null);
   };
 
-  const toggleTheme = () => {
-    const next = theme.mode === 'dark' ? 'light' : 'dark';
-    setThemePref(next); store.saveSettings({ theme: next });
+  const cycleTheme = () => {
+    const idx = THEME_ORDER.indexOf(themeName);
+    const next = THEME_ORDER[(idx + 1) % THEME_ORDER.length];
+    setThemeName(next); store.saveSettings({ themeName: next });
   };
   const sharePage = async () => { try { await Share.share({ message: activeTab.currentUrl, url: activeTab.currentUrl }); } catch (e) {} };
 
@@ -208,7 +211,7 @@ function Browser() {
     openHistory: () => { setMenuOpen(false); setView('history'); },
     share: () => { setMenuOpen(false); sharePage(); },
     reload: () => { setMenuOpen(false); reload(); },
-    toggleTheme: () => { toggleTheme(); },
+    toggleTheme: () => { cycleTheme(); },
   };
 
   const contentBottom = bottomInset + 8 + BAR_HEIGHT + 6;
@@ -267,7 +270,7 @@ function Browser() {
       {/* Contenu (au-dessus de la barre flottante) */}
       <View style={{ flex: 1, backgroundColor: theme.bg, marginBottom: contentBottom }}>
         {onHome ? (
-          <HomeScreen theme={theme} incognito={activeTab.incognito} onOpen={(url) => navigateTo(url)} onSearch={(qq) => navigateTo(qq)} />
+          <HomeScreen theme={theme} incognito={activeTab.incognito} onOpen={(url) => navigateTo(url)} onSearch={(qq) => navigateTo(qq)} onAsk={openAI} />
         ) : (
           <WebView
             key={activeTab.id}
@@ -302,7 +305,7 @@ function Browser() {
         </LaserBar>
       </View>
 
-      <Menu theme={theme} visible={menuOpen} onClose={() => setMenuOpen(false)} isBookmarked={isBookmarked} actions={menuActions} />
+      <Menu theme={theme} visible={menuOpen} onClose={() => setMenuOpen(false)} isBookmarked={isBookmarked} actions={menuActions} themeLabel={THEME_LABELS[themeName]} />
 
       {/* Choix du dossier pour un favori */}
       <BookmarkFolderModal
