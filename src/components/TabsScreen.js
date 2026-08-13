@@ -1,9 +1,19 @@
 // Écran de gestion des onglets : aperçu en grille, changement, fermeture, ajout.
+// N'utilise PAS react-native-safe-area-context (marges manuelles).
 import React from 'react';
-import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+import {
+  FlatList,
+  Platform,
+  Pressable,
+  StatusBar as RNStatusBar,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { domainOf } from '../utils/url';
+
+const TOP = Platform.OS === 'android' ? (RNStatusBar.currentHeight || 24) : 47;
 
 export default function TabsScreen({
   theme,
@@ -17,26 +27,28 @@ export default function TabsScreen({
 }) {
   const renderItem = ({ item }) => {
     const active = item.id === activeTabId;
+    const title = item.title && item.title !== 'Nouvel onglet'
+      ? item.title
+      : (item.currentUrl ? domainOf(item.currentUrl) : 'Nouvel onglet');
     return (
       <Pressable
         onPress={() => onSelect(item.id)}
-        style={[
-          styles.card,
-          { backgroundColor: theme.card, borderColor: active ? theme.accent : theme.border },
-        ]}
+        style={[styles.card, { backgroundColor: theme.card, borderColor: active ? theme.accent : theme.border }]}
       >
         <View style={[styles.cardHeader, { borderBottomColor: theme.border }]}>
-          <Ionicons name="globe-outline" size={14} color={theme.subtext} />
-          <Text numberOfLines={1} style={[styles.cardTitle, { color: theme.text }]}>
-            {item.title || domainOf(item.currentUrl || item.url) || 'Nouvel onglet'}
-          </Text>
+          {item.incognito ? (
+            <Ionicons name="eye-off" size={14} color={theme.subtext} />
+          ) : (
+            <Ionicons name="globe-outline" size={14} color={theme.subtext} />
+          )}
+          <Text numberOfLines={1} style={[styles.cardTitle, { color: theme.text }]}>{title}</Text>
           <Pressable onPress={() => onClose(item.id)} hitSlop={10}>
             <Ionicons name="close" size={18} color={theme.subtext} />
           </Pressable>
         </View>
         <View style={styles.cardBody}>
           <Text numberOfLines={4} style={[styles.cardUrl, { color: theme.subtext }]}>
-            {item.currentUrl || item.url}
+            {item.currentUrl || 'Page d’accueil'}
           </Text>
         </View>
       </Pressable>
@@ -44,7 +56,7 @@ export default function TabsScreen({
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: theme.chromeBg }]} edges={['top', 'bottom']}>
+    <View style={[styles.container, { backgroundColor: theme.chromeBg, paddingTop: TOP }]}>
       <View style={styles.header}>
         <Pressable onPress={onCloseAll} hitSlop={8}>
           <Text style={[styles.headerBtn, { color: theme.accent }]}>Tout fermer</Text>
@@ -66,14 +78,11 @@ export default function TabsScreen({
         contentContainerStyle={styles.grid}
       />
 
-      <Pressable
-        onPress={onNewTab}
-        style={[styles.newTab, { backgroundColor: theme.accent }]}
-      >
+      <Pressable onPress={onNewTab} style={[styles.newTab, { backgroundColor: theme.accent }]}>
         <Ionicons name="add" size={22} color="#fff" />
         <Text style={styles.newTabText}>Nouvel onglet</Text>
       </Pressable>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -114,7 +123,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 8,
     marginHorizontal: 16,
-    marginBottom: 8,
+    marginBottom: 20,
     paddingVertical: 15,
     borderRadius: 14,
   },

@@ -1,9 +1,19 @@
 // Écran liste réutilisable pour les Favoris et l'Historique.
+// N'utilise PAS react-native-safe-area-context (marges manuelles).
 import React from 'react';
-import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+import {
+  FlatList,
+  Platform,
+  Pressable,
+  StatusBar as RNStatusBar,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { prettyUrl } from '../utils/url';
+
+const TOP = Platform.OS === 'android' ? (RNStatusBar.currentHeight || 24) : 47;
 
 export default function ListScreen({
   theme,
@@ -43,7 +53,7 @@ export default function ListScreen({
   );
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: theme.bg }]} edges={['top', 'bottom']}>
+    <View style={[styles.container, { backgroundColor: theme.bg, paddingTop: TOP }]}>
       <View style={[styles.header, { borderBottomColor: theme.border }]}>
         <Pressable onPress={onBack} hitSlop={8} style={styles.headerSide}>
           <Ionicons name="chevron-back" size={26} color={theme.accent} />
@@ -73,7 +83,7 @@ export default function ListScreen({
           renderItem={renderItem}
         />
       )}
-    </SafeAreaView>
+    </View>
   );
 }
 
