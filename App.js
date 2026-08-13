@@ -27,6 +27,8 @@ import AddressBar from './src/components/AddressBar';
 import Toolbar from './src/components/Toolbar';
 import LaserBar from './src/components/LaserBar';
 import SettingsScreen from './src/components/SettingsScreen';
+import MemosScreen from './src/components/MemosScreen';
+import BottomNav from './src/components/BottomNav';
 import TabsScreen from './src/components/TabsScreen';
 import ListScreen from './src/components/ListScreen';
 import HomeScreen from './src/components/HomeScreen';
@@ -89,6 +91,8 @@ function Browser() {
   const [bookmarks, setBookmarks] = React.useState([]);
   const [history, setHistory] = React.useState([]);
   const [bmChooser, setBmChooser] = React.useState(null); // {url,title}
+  const [memos, setMemos] = React.useState([]);
+  const [selectedMemoId, setSelectedMemoId] = React.useState(null);
 
   const webviewRef = React.useRef(null);
   const activeTab = tabs.find((t) => t.id === activeId) || tabs[0];
@@ -103,18 +107,31 @@ function Browser() {
     Animated.timing(addrAnim, { toValue: show ? 1 : 0, duration: 180, useNativeDriver: false }).start();
   };
 
+  const [memosLoaded, setMemosLoaded] = React.useState(false);
   React.useEffect(() => {
     (async () => {
       try {
-        const [b, h, s] = await Promise.all([store.loadBookmarks(), store.loadHistory(), store.loadSettings()]);
+        const [b, h, s, mm] = await Promise.all([store.loadBookmarks(), store.loadHistory(), store.loadSettings(), store.loadMemos(null)]);
         setBookmarks(Array.isArray(b) ? b : []);
         setHistory(Array.isArray(h) ? h : []);
         if (s && s.themeName && themes[s.themeName]) setThemeName(s.themeName);
-      } catch (e) {}
+        setMemos(Array.isArray(mm) ? mm : [
+          { id: 'm_seed1', type: 'idea', title: 'Idée Business – NEXX', body: 'Navigateur mobile innovant avec mémoire intégrée pour tout retrouver.', tags: ['Idée', 'Business'], time: Date.now(), starred: true },
+          { id: 'm_seed2', type: 'code', title: 'Bout de code utile', body: 'const x = () => console.log("Mémoire Pro");', tags: ['Code'], time: Date.now() - 86400000, starred: false },
+          { id: 'm_seed3', type: 'text', title: 'Note rapide', body: 'Garde tes idées, textes et codes ici ✨. Appuie sur + pour en ajouter.', tags: ['Note'], time: Date.now() - 90000000, starred: false },
+        ]);
+      } catch (e) {} finally { setMemosLoaded(true); }
     })();
   }, []);
   React.useEffect(() => { store.saveBookmarks(bookmarks); }, [bookmarks]);
   React.useEffect(() => { store.saveHistory(history); }, [history]);
+  React.useEffect(() => { if (memosLoaded) store.saveMemos(memos); }, [memos, memosLoaded]);
+
+  const saveMemo = (memo) => setMemos((prev) => { const i = prev.findIndex((x) => x.id === memo.id); if (i >= 0) { const c = [...prev]; c[i] = memo; return c; } return [memo, ...prev]; });
+  const deleteMemo = (id) => setMemos((prev) => prev.filter((x) => x.id !== id));
+  const toggleStarMemo = (id) => setMemos((prev) => prev.map((x) => (x.id === id ? { ...x, starred: !x.starred } : x)));
+  const openMemos = () => { setSelectedMemoId(null); setView('memos'); };
+  const openMemo = (id) => { setSelectedMemoId(id); setView('memos'); };
   React.useEffect(() => { showAddr(true); }, [activeId, activeTab.url]);
 
   const patchTab = React.useCallback((id, patch) => {
@@ -225,6 +242,16 @@ function Browser() {
     );
   }
 
+  if (view === 'memos') {
+    return (
+      <MemosScreen
+        theme={theme} memos={memos} onBack={() => setView('browser')}
+        onSave={saveMemo} onDelete={deleteMemo} onToggleStar={toggleStarMemo}
+        initialMemoId={selectedMemoId} bottomInset={bottomInset}
+      />
+    );
+  }
+
   if (view === 'tabs') {
     return (
       <TabsScreen
@@ -282,7 +309,9 @@ function Browser() {
           <HomeScreen
             theme={theme} incognito={activeTab.incognito}
             onOpen={(url) => navigateTo(url)} onSearch={(qq) => navigateTo(qq)} onAsk={openAI}
-            recent={history} onOpenBookmarks={() => setView('bookmarks')} onOpenHistory={() => setView('history')}
+            memos={memos} onOpenMemos={openMemos} onOpenMemo={openMemo}
+            tabs={tabs} onSelectTab={selectTab} onCloseTab={closeTab} onCloseAllTabs={closeAllTabs}
+            onOpenBookmarks={() => setView('bookmarks')} onOpenHistory={() => setView('history')}
             onOpenSettings={() => setView('settings')} onNewTab={() => addTab(false)}
           />
         ) : (
@@ -308,15 +337,23 @@ function Browser() {
         )}
       </View>
 
-      {/* Barre flottante laser (au-dessus de la barre système) */}
+      {/* Barre du bas (au-dessus de la barre système) */}
       <View style={{ position: 'absolute', left: 14, right: 14, bottom: bottomInset + 8 }}>
-        <LaserBar theme={theme}>
-          <Toolbar
-            theme={theme} canGoBack={activeTab.canGoBack} canGoForward={activeTab.canGoForward}
-            tabCount={tabs.length} onBack={goBack} onForward={goForward} onHome={goHome}
-            onTabs={() => setView('tabs')} onMenu={() => setView('settings')}
+        {onHome ? (
+          <BottomNav
+            theme={theme} active="home" tabCount={tabs.length}
+            onHome={goHome} onTabs={() => setView('tabs')} onAdd={() => addTab(false)}
+            onCollections={() => setView('bookmarks')} onProfil={() => setView('settings')}
           />
-        </LaserBar>
+        ) : (
+          <LaserBar theme={theme}>
+            <Toolbar
+              theme={theme} canGoBack={activeTab.canGoBack} canGoForward={activeTab.canGoForward}
+              tabCount={tabs.length} onBack={goBack} onForward={goForward} onHome={goHome}
+              onTabs={() => setView('tabs')} onMenu={() => setView('settings')}
+            />
+          </LaserBar>
+        )}
       </View>
 
       {/* Choix du dossier pour un favori */}

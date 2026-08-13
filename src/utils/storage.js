@@ -6,6 +6,7 @@ const KEYS = {
   history: '@browser/history',
   settings: '@browser/settings',
   shortcuts: '@browser/shortcuts',
+  memos: '@browser/memos',
 };
 
 async function readJson(key, fallback) {
@@ -55,4 +56,12 @@ export function loadShortcuts(fallback) {
 }
 export function saveShortcuts(items) {
   return writeJson(KEYS.shortcuts, items);
+}
+
+// ---- Mémos (Mémoire Pro) ----
+export function loadMemos(fallback) {
+  return readJson(KEYS.memos, fallback);
+}
+export function saveMemos(list) {
+  return writeJson(KEYS.memos, list);
 }
