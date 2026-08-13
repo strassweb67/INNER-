@@ -89,17 +89,17 @@ export default function AddressBar({
 const styles = StyleSheet.create({
   wrap: {
     flex: 1,
-    height: 44,
-    borderRadius: 14,
+    height: 36,
+    borderRadius: 12,
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 12,
+    paddingHorizontal: 11,
   },
   lead: { marginRight: 7 },
   trail: { marginLeft: 7, width: 20, alignItems: 'center' },
   input: {
     flex: 1,
-    fontSize: 16,
+    fontSize: 14.5,
     padding: 0,
   },
 });

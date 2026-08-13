@@ -1,4 +1,4 @@
-// Écran de gestion des onglets : dégradé + cartes en verre.
+// Écran de gestion des onglets : liste compacte, fine et sombre pour bien voir les onglets.
 import React from 'react';
 import {
   FlatList,
@@ -11,7 +11,6 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import Glass from './Glass';
 import { domainOf } from '../utils/url';
 
 const TOP = Platform.OS === 'android' ? (RNStatusBar.currentHeight || 24) : 47;
@@ -25,6 +24,7 @@ export default function TabsScreen({
   onNewTab,
   onDone,
   onCloseAll,
+  bottomInset = 0,
 }) {
   const renderItem = ({ item }) => {
     const active = item.id === activeTabId;
@@ -32,41 +32,40 @@ export default function TabsScreen({
       ? item.title
       : (item.currentUrl ? domainOf(item.currentUrl) : 'Nouvel onglet');
     return (
-      <Pressable onPress={() => onSelect(item.id)} style={styles.cardWrap}>
-        <Glass
-          theme={theme}
-          intensity={50}
-          hairline
-          style={[styles.card, { borderColor: active ? theme.accent : theme.glassBorder, borderWidth: active ? 2 : StyleSheet.hairlineWidth }]}
-        >
-          <View style={[styles.cardHeader, { borderBottomColor: theme.glassBorder }]}>
-            <Ionicons name={item.incognito ? 'eye-off' : 'globe-outline'} size={14} color={theme.subtext} />
-            <Text numberOfLines={1} style={[styles.cardTitle, { color: theme.text }]}>{title}</Text>
-            <Pressable onPress={() => onClose(item.id)} hitSlop={10}>
-              <Ionicons name="close" size={18} color={theme.subtext} />
-            </Pressable>
-          </View>
-          <View style={styles.cardBody}>
-            <Text numberOfLines={4} style={[styles.cardUrl, { color: theme.subtext }]}>
-              {item.currentUrl || 'Page d’accueil'}
-            </Text>
-          </View>
-        </Glass>
+      <Pressable
+        onPress={() => onSelect(item.id)}
+        style={({ pressed }) => [
+          styles.row,
+          {
+            backgroundColor: active ? 'rgba(10,132,255,0.16)' : 'rgba(255,255,255,0.05)',
+            borderColor: active ? theme.accent : 'rgba(255,255,255,0.09)',
+          },
+          pressed && { opacity: 0.7 },
+        ]}
+      >
+        <View style={styles.favicon}>
+          <Ionicons name={item.incognito ? 'eye-off' : 'globe-outline'} size={17} color="#c9cdd6" />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text numberOfLines={1} style={styles.rowTitle}>{title}</Text>
+          <Text numberOfLines={1} style={styles.rowUrl}>{item.currentUrl || 'Page d’accueil'}</Text>
+        </View>
+        <Pressable onPress={() => onClose(item.id)} hitSlop={12} style={styles.close}>
+          <Ionicons name="close" size={18} color="#9aa0ab" />
+        </Pressable>
       </Pressable>
     );
   };
 
   return (
-    <View style={{ flex: 1 }}>
-      <LinearGradient colors={theme.gradientTabs} style={StyleSheet.absoluteFill} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} />
+    <View style={{ flex: 1, backgroundColor: '#07080d' }}>
+      <LinearGradient colors={['#0a0e1c', '#0d0a18']} style={StyleSheet.absoluteFill} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} />
       <View style={[styles.container, { paddingTop: TOP }]}>
         <View style={styles.header}>
           <Pressable onPress={onCloseAll} hitSlop={8}>
             <Text style={[styles.headerBtn, { color: theme.accent }]}>Tout fermer</Text>
           </Pressable>
-          <Text style={[styles.headerTitle, { color: theme.text }]}>
-            {tabs.length} onglet{tabs.length > 1 ? 's' : ''}
-          </Text>
+          <Text style={styles.headerTitle}>{tabs.length} onglet{tabs.length > 1 ? 's' : ''}</Text>
           <Pressable onPress={onDone} hitSlop={8}>
             <Text style={[styles.headerBtn, { color: theme.accent, fontWeight: '700' }]}>OK</Text>
           </Pressable>
@@ -76,16 +75,15 @@ export default function TabsScreen({
           data={tabs}
           keyExtractor={(t) => t.id}
           renderItem={renderItem}
-          numColumns={2}
-          columnWrapperStyle={{ gap: 12 }}
-          contentContainerStyle={styles.grid}
+          contentContainerStyle={{ paddingHorizontal: 14, paddingBottom: 90 + bottomInset }}
         />
 
-        <Pressable onPress={onNewTab} style={({ pressed }) => [pressed && { opacity: 0.85 }]}>
-          <Glass theme={theme} border hairline intensity={60} style={[styles.newTab, { borderColor: theme.glassBorder }]}>
-            <Ionicons name="add" size={22} color={theme.accent} />
-            <Text style={[styles.newTabText, { color: theme.text }]}>Nouvel onglet</Text>
-          </Glass>
+        <Pressable
+          onPress={onNewTab}
+          style={({ pressed }) => [styles.newTab, { bottom: 18 + bottomInset }, pressed && { opacity: 0.85 }]}
+        >
+          <Ionicons name="add" size={22} color="#fff" />
+          <Text style={styles.newTabText}>Nouvel onglet</Text>
         </Pressable>
       </View>
     </View>
@@ -99,33 +97,42 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingVertical: 14,
   },
-  headerTitle: { fontSize: 17, fontWeight: '600' },
+  headerTitle: { fontSize: 16, fontWeight: '600', color: '#fff' },
   headerBtn: { fontSize: 16 },
-  grid: { padding: 12, gap: 12 },
-  cardWrap: { flex: 1, marginBottom: 12 },
-  card: { height: 160, borderRadius: 16, overflow: 'hidden' },
-  cardHeader: {
+  row: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-    gap: 6,
-    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderRadius: 13,
+    borderWidth: StyleSheet.hairlineWidth,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    marginBottom: 8,
   },
-  cardTitle: { flex: 1, fontSize: 12, fontWeight: '600' },
-  cardBody: { flex: 1, padding: 10 },
-  cardUrl: { fontSize: 12, lineHeight: 16 },
+  favicon: {
+    width: 30,
+    height: 30,
+    borderRadius: 8,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 11,
+  },
+  rowTitle: { color: '#f2f3f6', fontSize: 14.5, fontWeight: '600' },
+  rowUrl: { color: '#8a8f9b', fontSize: 12, marginTop: 1 },
+  close: { paddingLeft: 10 },
   newTab: {
+    position: 'absolute',
+    left: 16,
+    right: 16,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    marginHorizontal: 16,
-    marginBottom: 20,
     paddingVertical: 15,
     borderRadius: 16,
+    backgroundColor: '#0a84ff',
   },
-  newTabText: { fontSize: 17, fontWeight: '600' },
+  newTabText: { color: '#fff', fontSize: 16, fontWeight: '600' },
 });

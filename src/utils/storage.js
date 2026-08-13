@@ -5,6 +5,7 @@ const KEYS = {
   bookmarks: '@browser/bookmarks',
   history: '@browser/history',
   settings: '@browser/settings',
+  shortcuts: '@browser/shortcuts',
 };
 
 async function readJson(key, fallback) {
@@ -46,4 +47,12 @@ export function loadSettings() {
 }
 export function saveSettings(settings) {
   return writeJson(KEYS.settings, settings);
+}
+
+// ---- Raccourcis / dossiers de la page d'accueil ----
+export function loadShortcuts(fallback) {
+  return readJson(KEYS.shortcuts, fallback);
+}
+export function saveShortcuts(items) {
+  return writeJson(KEYS.shortcuts, items);
 }

@@ -1,10 +1,10 @@
-// Barre d'outils du bas (verre) : précédent, suivant, accueil, onglets, menu.
+// Barre d'outils du bas (contenu) : précédent, suivant, accueil, onglets, menu.
+// Rendue à l'intérieur de LaserBar (qui fournit le verre + le liseré lumineux).
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import Glass from './Glass';
 
-function ToolButton({ name, onPress, disabled, color, badge }) {
+function ToolButton({ name, onPress, disabled, color }) {
   return (
     <Pressable
       onPress={onPress}
@@ -12,12 +12,24 @@ function ToolButton({ name, onPress, disabled, color, badge }) {
       hitSlop={8}
       style={({ pressed }) => [styles.btn, pressed && !disabled && { opacity: 0.4 }]}
     >
-      <Ionicons name={name} size={25} color={disabled ? color.subtext : color.text} />
-      {badge != null && (
-        <View style={[styles.badge, { borderColor: color.text }]}>
-          <Text style={[styles.badgeText, { color: color.text }]}>{badge}</Text>
-        </View>
-      )}
+      <Ionicons name={name} size={24} color={disabled ? color.subtext : color.text} />
+    </Pressable>
+  );
+}
+
+// Icône multi-onglets : carré arrondi contenant le nombre d'onglets.
+function TabsButton({ theme, count, onPress }) {
+  return (
+    <Pressable
+      onPress={onPress}
+      hitSlop={8}
+      style={({ pressed }) => [styles.btn, pressed && { opacity: 0.4 }]}
+    >
+      <View style={[styles.tabsBox, { borderColor: theme.text }]}>
+        <Text style={[styles.tabsCount, { color: theme.text }]} numberOfLines={1}>
+          {count > 99 ? '99+' : String(count)}
+        </Text>
+      </View>
     </Pressable>
   );
 }
@@ -32,18 +44,15 @@ export default function Toolbar({
   onHome,
   onTabs,
   onMenu,
-  bottomInset = 0,
 }) {
   return (
-    <Glass theme={theme} border={false} hairline intensity={60} style={{ paddingBottom: bottomInset }}>
-      <View style={styles.bar}>
-        <ToolButton name="chevron-back" onPress={onBack} disabled={!canGoBack} color={theme} />
-        <ToolButton name="chevron-forward" onPress={onForward} disabled={!canGoForward} color={theme} />
-        <ToolButton name="home-outline" onPress={onHome} color={theme} />
-        <ToolButton name="copy-outline" onPress={onTabs} color={theme} badge={tabCount} />
-        <ToolButton name="menu" onPress={onMenu} color={theme} />
-      </View>
-    </Glass>
+    <View style={styles.bar}>
+      <ToolButton name="chevron-back" onPress={onBack} disabled={!canGoBack} color={theme} />
+      <ToolButton name="chevron-forward" onPress={onForward} disabled={!canGoForward} color={theme} />
+      <ToolButton name="home-outline" onPress={onHome} color={theme} />
+      <TabsButton theme={theme} count={tabCount} onPress={onTabs} />
+      <ToolButton name="menu" onPress={onMenu} color={theme} />
+    </View>
   );
 }
 
@@ -52,21 +61,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-around',
     alignItems: 'center',
-    paddingTop: 9,
-    paddingBottom: 7,
+    paddingVertical: 11,
+    paddingHorizontal: 6,
   },
-  btn: { padding: 6, minWidth: 44, alignItems: 'center', justifyContent: 'center' },
-  badge: {
-    position: 'absolute',
-    top: 2,
-    right: 6,
-    minWidth: 18,
-    height: 18,
-    paddingHorizontal: 3,
-    borderRadius: 5,
-    borderWidth: 1.5,
+  btn: { paddingHorizontal: 10, paddingVertical: 2, alignItems: 'center', justifyContent: 'center' },
+  tabsBox: {
+    width: 23,
+    height: 23,
+    borderRadius: 7,
+    borderWidth: 2,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  badgeText: { fontSize: 11, fontWeight: '700' },
+  tabsCount: { fontSize: 12, fontWeight: '800' },
 });
