@@ -206,7 +206,7 @@ export default function HomeScreen(props) {
       <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
         {/* Top bar */}
         <View style={styles.topBar}>
-          <Text style={styles.logo}>NE<Text style={{ color: theme.accent }}>XX</Text></Text>
+          <Text style={styles.logo}><Text style={{ color: '#e11d2a' }}>Osiris</Text><Text style={{ color: '#ffffff' }}> Nav</Text></Text>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
             <Pressable onPress={() => soon('Bouclier / VPN')} hitSlop={8}><Ionicons name="shield-half" size={22} color={theme.text} /></Pressable>
             <Pressable onPress={onOpenSettings} hitSlop={8}>
@@ -417,7 +417,7 @@ function PrimaryBtn({ theme, label, onPress, disabled }) {
 const styles = StyleSheet.create({
   scroll: { paddingHorizontal: 16, paddingTop: 6, paddingBottom: 30 },
   topBar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14, marginTop: 2 },
-  logo: { color: '#fff', fontSize: 26, fontWeight: '900', letterSpacing: 6 },
+  logo: { fontSize: 24, fontWeight: '900', letterSpacing: 0.5 },
   avatar: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
   searchGlow: { borderWidth: 1.5, borderRadius: 28, shadowOpacity: 0.7, shadowRadius: 12, shadowOffset: { width: 0, height: 0 }, elevation: 8 },
   searchBar: { flexDirection: 'row', alignItems: 'center', gap: 8, borderRadius: 27, paddingLeft: 16, paddingRight: 8, height: 52 },

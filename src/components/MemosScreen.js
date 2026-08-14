@@ -145,16 +145,18 @@ export default function MemosScreen({ theme, memos, onBack, onSave, onDelete, on
         </View>
 
         {/* Catégories */}
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, gap: 8, paddingBottom: 12 }}>
-          {CATS.map((c) => {
-            const active = cat === c.key;
-            return (
-              <Pressable key={c.key} onPress={() => setCat(c.key)} style={[styles.catChip, { backgroundColor: active ? theme.accent : theme.inputBg }]}>
-                <Text style={{ color: active ? theme.onAccent : theme.text, fontSize: 13, fontWeight: '600' }}>{c.label} {counts[c.key] || 0}</Text>
-              </Pressable>
-            );
-          })}
-        </ScrollView>
+        <View style={{ height: 52 }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, gap: 8, alignItems: 'center' }}>
+            {CATS.map((c) => {
+              const active = cat === c.key;
+              return (
+                <Pressable key={c.key} onPress={() => setCat(c.key)} style={[styles.catChip, { backgroundColor: active ? theme.accent : theme.inputBg, borderColor: active ? theme.accent : theme.border }]}>
+                  <Text style={{ color: active ? theme.onAccent : theme.text, fontSize: 13, fontWeight: '600' }}>{c.label} {counts[c.key] || 0}</Text>
+                </Pressable>
+              );
+            })}
+          </ScrollView>
+        </View>
 
         <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 90 + bottomInset }}>
           {filtered.length === 0 ? (
@@ -249,7 +251,7 @@ const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12 },
   title: { fontSize: 19, fontWeight: '800' },
   search: { flexDirection: 'row', alignItems: 'center', gap: 10, borderRadius: 16, paddingHorizontal: 14, height: 46 },
-  catChip: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 16 },
+  catChip: { height: 36, paddingHorizontal: 16, borderRadius: 18, borderWidth: StyleSheet.hairlineWidth, alignItems: 'center', justifyContent: 'center' },
   memoRow: { flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: 16, padding: 12, marginBottom: 10 },
   memoIcon: { width: 40, height: 40, borderRadius: 12, borderWidth: 1.5, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255,255,255,0.03)' },
   tagSm: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8 },

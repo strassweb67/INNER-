@@ -3,6 +3,7 @@ import React from 'react';
 import {
   Alert,
   Animated,
+  BackHandler,
   Linking,
   Modal,
   Platform,
@@ -134,6 +135,21 @@ function Browser() {
   const openMemo = (id) => { setSelectedMemoId(id); setView('memos'); };
   React.useEffect(() => { showAddr(true); }, [activeId, activeTab.url]);
 
+  // Bouton retour Android : revient à l'accueil au lieu de quitter
+  React.useEffect(() => {
+    const onBack = () => {
+      if (view !== 'browser') { setView('browser'); return true; }
+      if (activeTab.url) {
+        if (activeTab.canGoBack) { try { webviewRef.current && webviewRef.current.goBack(); } catch (e) {} }
+        else { patchTab(activeId, { url: '', currentUrl: '', title: 'Nouvel onglet' }); }
+        return true;
+      }
+      return false; // déjà sur l'accueil -> comportement système
+    };
+    const sub = BackHandler.addEventListener('hardwareBackPress', onBack);
+    return () => sub.remove();
+  }, [view, activeTab.url, activeTab.canGoBack, activeId, patchTab]);
+
   const patchTab = React.useCallback((id, patch) => {
     setTabs((prev) => prev.map((t) => (t.id === id ? { ...t, ...patch } : t)));
   }, []);
@@ -159,7 +175,10 @@ function Browser() {
     setView('browser');
   }, [activeId]);
 
-  const goBack = () => { try { webviewRef.current && webviewRef.current.goBack(); } catch (e) {} };
+  const goBack = () => {
+    if (activeTab.canGoBack) { try { webviewRef.current && webviewRef.current.goBack(); } catch (e) {} }
+    else { goHome(); }
+  };
   const goForward = () => { try { webviewRef.current && webviewRef.current.goForward(); } catch (e) {} };
   const reload = () => { try { webviewRef.current && webviewRef.current.reload(); } catch (e) {} };
   const stop = () => { try { webviewRef.current && webviewRef.current.stopLoading(); } catch (e) {} };
